@@ -15,3 +15,13 @@ models and harnessess.
 
 I am building this out for `claude-code >= 2.1.280`. This version of claude-code
 reads AGENTS.md natively.
+
+## Configurations
+
+There are three types of configurations that will kickstart my journey.
+
+| Type             | Symlink                                                                 |
+| ---------------- | ----------------------------------------------------------------------- |
+| settings.json    | No. claude mutates this file.                                           |
+| instructions     | Yes. claude only reads these, for ex: `AGENTS.md`, `rules/`, `skills`   |
+| states & secrets | No. Also never track these either, for ex: sessions, history, cache etc |
