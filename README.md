@@ -10,3 +10,8 @@ and dislikes, per language conventions etc.
 
 I want to start this out for claude-code to be able expand it for different
 models and harnessess.
+
+## Constraints
+
+I am building this out for `claude-code >= 2.1.280`. This version of claude-code
+reads AGENTS.md natively.
