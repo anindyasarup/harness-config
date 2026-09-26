@@ -32,6 +32,12 @@
               ];
               commands = {
                 betterleaks.run = "betterleaks git --pre-commit --staged --config ${betterleaksConfig}";
+                statix.run = "statix check";
+                deadnix.run = "deadnix --fail";
+                nixfmt = {
+                  glob = "*.nix";
+                  run = "treefmt --fail-on-change";
+                };
               };
             };
           };
@@ -42,6 +48,9 @@
               pkgs.just
               pkgs.lefthook
               pkgs.betterleaks
+              pkgs.statix
+              pkgs.deadnix
+              pkgs.nixfmt-tree
             ];
 
             shellHook = ''
