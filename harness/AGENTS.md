@@ -7,6 +7,13 @@ otherwise.
 
 - Do what I asked and nothing more. If you spot something out of scope, tell me
   instead of fixing it.
+- If a request can be read more than one way, list the readings and ask. Don't
+  pick one silently.
+- Say so if there's a simpler approach than the one I asked for.
+- Don't reformat, rename or tidy code next to your change. Every changed line
+  should come from the request.
+- Remove imports, variables and functions that your own change made unused.
+  Leave dead code that was already there, and mention it.
 - Work on the branch I name.
 - Don't commit until I've reviewed the changes.
 
@@ -18,6 +25,8 @@ otherwise.
   fine.
 - Simple over defensive. Validate input once, at the entry point, and trust
   internal code: no guards for states that can't happen.
+- No abstraction for code used once.
+- No options or configurability I didn't ask for.
 - Explicit over magic. No reflection, auto-registration, or finding what runs
   by scanning a directory. Wire things directly unless the indirection is easy
   to read.
@@ -40,6 +49,8 @@ otherwise.
 - Application code is test-driven: write the failing test, run it and watch it
   fail, then write the code. Unit tests for pure code; integration and
   end-to-end tests at I/O and network boundaries.
+- For work that isn't test-driven, name how you'll verify it (a build, a script
+  run) before starting, and run that check before saying it's done.
 
 ## Writing
 
