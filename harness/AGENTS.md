@@ -99,5 +99,11 @@ My machines are managed declaratively with nix-darwin and home-manager.
 - Never install anything globally by hand (`brew install`, `npm i -g`,
   `pip install --user`, `cargo install`). If a tool is missing, tell me which
   one.
-- Project tools belong in the project's `flake.nix` devShell, loaded by direnv.
-- Python interpreters, venvs and packages are managed by `uv`, not Nix.
+- Every project has a `flake.nix` devShell, tracked in git and loaded by direnv.
+  It provides the language's package manager, plus the runtime or SDK when the
+  package manager can't install that itself.
+- Nix stops there. The project's dependencies, and any tools the ecosystem
+  installs per project, belong to the language's package manager and its
+  lockfile.
+- In shared or work repos, assume I'm the only one using Nix. The repo must
+  work without it, so take tool versions from what the repo already declares.

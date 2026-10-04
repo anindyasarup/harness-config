@@ -42,3 +42,7 @@ paths:
   not `test`.
 - Tests may mutate shared fixtures in hooks, for example emptying a queue with
   `queue.length = 0` in `afterEach`.
+
+## Tooling
+
+- Use `pnpm` unless the project already uses another package manager.
