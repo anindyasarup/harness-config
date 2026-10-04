@@ -25,3 +25,10 @@ There are three types of configurations that will kickstart my journey.
 | settings.json    | No. claude mutates this file.                                           |
 | instructions     | Yes. claude only reads these, for ex: `AGENTS.md`, `rules/`, `skills`   |
 | states & secrets | No. Also never track these either, for ex: sessions, history, cache etc |
+
+## Retro
+
+While building this repo I realised I could write down my sensible defaults
+because I already knew what good looks like from pre-AI era. AI applying these
+is not a deterministic action but they're written down now, so I can refer back
+to them and build on them.
