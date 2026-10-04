@@ -1,3 +1,4 @@
 .DS_Store
 .lefthook.yaml
 .rumdl.toml
+.rumdl_cache
