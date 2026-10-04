@@ -8,7 +8,7 @@ paths:
 ## Style
 
 - Prefer a functional style: pure functions, immutability, and higher-order
-  functions. Avoid mutation.
+  functions.
 - Use `const` over `let`.
 - Use `const` arrow functions only. No `function` declarations, no classes.
 - Pass dependencies (logger, db client, clock) into functions as arguments
