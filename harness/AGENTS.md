@@ -46,11 +46,40 @@ otherwise.
 - Follow the codebase's existing naming conventions, then the language's.
 - Code is idempotent: running it twice gives the same result as running it
   once.
+
+## Testing
+
+### When
+
 - Application code is test-driven: write the failing test, run it and watch it
-  fail, then write the code. Unit tests for pure code; integration and
-  end-to-end tests at I/O and network boundaries.
+  fail, then write the code.
 - For work that isn't test-driven, name how you'll verify it (a build, a script
   run) before starting, and run that check before saying it's done.
+- If a requirement could go in a comment, write a test for it instead.
+
+### Which tier
+
+- Choose the tier that proves the behaviour, even when a cheaper tier would be
+  quicker to write.
+- Unit tests: pure logic and its edge cases (empty results, missing config,
+  malformed data the code reports as errors). Feed in known inputs; no real I/O.
+- Integration tests: any code that crosses a boundary (database, HTTP,
+  filesystem, queue), including bad input rejected at the entry point, such as a
+  malformed API request.
+- E2E tests: critical paths, wiring between producers and consumers, and bad
+  input that arrives through another service. Unit tests build their fixtures by
+  hand, so shape mismatches between a producer and its consumers only show up
+  here.
+
+### How
+
+- Test through the public interface. Don't assert on implementation details.
+- Set up each test on its own, with no global or shared mutable state in the
+  test file. Shared fixtures are fine if a hook resets them between tests.
+- Keep tests deterministic and offline; local containers are fine. Inject the
+  network, clock and randomness when a test needs them.
+- Never let a test touch a real or production system, even read-only.
+- Don't test third-party libraries or trivial getters.
 
 ## Writing
 
