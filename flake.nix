@@ -23,6 +23,24 @@
             title = "harness-config-rules";
             extend.useDefault = true;
           };
+          rumdlConfig = (pkgs.formats.toml { }).generate ".rumdl.toml" {
+            global.line-length = 80;
+            MD003.style = "atx";
+            MD004.style = "dash";
+            MD013 = {
+              reflow = true;
+              code-blocks = false;
+            };
+            MD035.style = "---";
+            MD046.style = "fenced";
+            MD048.style = "backtick";
+            MD049.style = "asterisk";
+            MD050.style = "asterisk";
+            MD060 = {
+              enabled = true;
+              style = "aligned";
+            };
+          };
           lefthookConfig = (pkgs.formats.yaml { }).generate ".lefthook.yaml" {
             pre-commit = {
               parallel = true;
@@ -38,6 +56,11 @@
                   glob = "*.nix";
                   run = "treefmt --fail-on-change";
                 };
+                rumdl = {
+                  glob = "*.md";
+                  run = "rumdl check --fix --no-cache --config ${rumdlConfig} {staged_files}";
+                  stage_fixed = true;
+                };
               };
             };
           };
@@ -51,10 +74,12 @@
               pkgs.statix
               pkgs.deadnix
               pkgs.nixfmt-tree
+              pkgs.rumdl
             ];
 
             shellHook = ''
               ln -sf ${lefthookConfig} .lefthook.yaml
+              ln -sf ${rumdlConfig} .rumdl.toml
               lefthook install
             '';
           };
