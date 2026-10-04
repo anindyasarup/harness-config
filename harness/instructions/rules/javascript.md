@@ -14,6 +14,13 @@ paths:
 - Pass dependencies (logger, db client, clock) into functions as arguments
   instead of importing them. Importing pure functions is fine.
 - Merge arrays with `.concat()`, not spread: `a.concat(b)` not `[...a, ...b]`.
+- Pass an object when a function receives dependencies or context (`log`,
+  `lookup`, `config`, injected functions), or several values with no natural
+  order. Factories always take an object.
+- Destructure in the signature, mirroring the source's shape:
+  `({ lookup: { latitude, longitude }, timezone })`.
+- Use positional arguments for small data-in/data-out helpers where the order
+  reads naturally: `shiftBy(decimal, quantity)`.
 
 ## Naming
 
@@ -24,8 +31,8 @@ paths:
   has none:
 
   ```js
-  const _log = (logger) => (input) => logger.info(input);
-  const log = _log(logger);
+  const _log = ({ logger }) => (input) => logger.info(input);
+  const log = _log({ logger });
   log("hello");
   ```
 
