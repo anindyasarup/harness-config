@@ -2,6 +2,8 @@
   model = "sonnet";
   effortLevel = "medium";
 
+  permissions.defaultMode = "default";
+
   theme = "auto";
 
   tui = "fullscreen";
@@ -31,5 +33,4 @@
     ];
   };
 
-  permissions.defaultMode = "default";
 }
