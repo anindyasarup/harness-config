@@ -10,6 +10,7 @@
   editorMode = "normal";
   autoScrollEnabled = true;
 
+  autoMemoryEnabled = false;
   remoteControlAtStartup = false;
 
   attribution = {
