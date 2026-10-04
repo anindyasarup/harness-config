@@ -26,7 +26,7 @@
         hooks = [
           {
             type = "command";
-            command = "<some-path-or-symlink-here>/hooks/check-no-comments.sh";
+            command = "$HOME/.claude/hooks/post-tool-use";
           }
         ];
       }
