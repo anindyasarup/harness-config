@@ -17,23 +17,31 @@
       harness-config,
       ...
     }:
-    {
-      homeConfigurations.test = home-manager.lib.homeManagerConfiguration {
-        pkgs = import nixpkgs {
-          system = "aarch64-linux";
-          config.allowUnfreePredicate = pkg: nixpkgs.lib.getName pkg == "claude-code";
+    let
+      home =
+        module:
+        home-manager.lib.homeManagerConfiguration {
+          pkgs = import nixpkgs {
+            system = "aarch64-linux";
+            config.allowUnfreePredicate = pkg: nixpkgs.lib.getName pkg == "claude-code";
+          };
+          modules = [
+            harness-config.homeManagerModules.default
+            {
+              home = {
+                username = "root";
+                homeDirectory = "/root";
+                stateVersion = "26.05";
+              };
+            }
+            module
+          ];
         };
-        modules = [
-          harness-config.homeManagerModules.default
-          {
-            home = {
-              username = "root";
-              homeDirectory = "/root";
-              stateVersion = "26.05";
-            };
-            harness.claude-code.enable = true;
-          }
-        ];
+    in
+    {
+      homeConfigurations = {
+        test = home { harness.claude-code.enable = true; };
+        disabled = home { programs.claude-code.enable = true; };
       };
     };
 }
