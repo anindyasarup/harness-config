@@ -3,3 +3,6 @@
 .rumdl.toml
 .rumdl_cache
 .container
+.pytest_cache
+__pycache__
+.e2e
