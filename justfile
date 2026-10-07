@@ -39,6 +39,10 @@ exec *command:
 down:
     container stop {{ name }}
 
+[positional-arguments]
+test *args:
+    uv run pytest "$@"
+
 update-consumer: copy
     container run --rm --memory 2G \
       --mount type=bind,source={{ source }},target=/harness-config,readonly \
