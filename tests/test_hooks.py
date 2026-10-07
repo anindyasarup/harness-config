@@ -7,6 +7,30 @@ import pytest
     ("on_disk", "tool_input", "reason"),
     [
         pytest.param(
+            "x = 1  # set x\n",
+            {"file_path": "/tmp/hook/written.py", "content": "x = 1  # set x\n"},
+            "comment(s) introduced",
+            id="blocks a comment in a written file",
+        ),
+        pytest.param(
+            "x = 1\ny = 2  # set y\n",
+            {"file_path": "/tmp/hook/edited.py", "old_string": "y = 2\n", "new_string": "y = 2  # set y\n"},
+            "comment(s) introduced",
+            id="blocks a comment added by an edit",
+        ),
+        pytest.param(
+            "# Notes\n\na \u2014 b\n",
+            {
+                "file_path": "/tmp/hook/notes.md",
+                "edits": [
+                    {"old_string": "# Title", "new_string": "# Notes"},
+                    {"old_string": "a b", "new_string": "a \u2014 b"},
+                ],
+            },
+            "Em-dash added",
+            id="blocks an em-dash added by the second of several edits",
+        ),
+        pytest.param(
             "{}",
             {"notebook_path": "/tmp/hook/code.ipynb", "cell_type": "code", "new_source": "# load\nx = 1"},
             "comment(s) introduced",
