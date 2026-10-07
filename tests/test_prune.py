@@ -45,3 +45,21 @@ def test_prunes_what_it_replaces(seeded_claude_config, activate, in_container):
 
     assert present("skills/synced/kept/SKILL.md")
     assert in_container("cat", "/root/.claude/settings.json").stdout == "{}\n"
+
+
+def test_activating_again_after_pruning_changes_nothing(seeded_claude_config, activate, in_container):
+    def listing():
+        found = in_container(
+            "sh",
+            "-c",
+            "find /root/.claude -printf '%p %y %l\\n' && find /root/.claude -type f -exec sha256sum {} +",
+        )
+        assert found.returncode == 0, found.stderr
+        return sorted(found.stdout.splitlines())
+
+    activate("test")
+    before = listing()
+
+    activate("test")
+
+    assert listing() == before
