@@ -8,26 +8,31 @@ This repo is meant to be one place that holds how I like to work, my likes
 and dislikes, per-language conventions, etc.
 
 I want to start this out with claude-code and be able to expand it to
-different models and harnesses.
+different harnesses.
 
-## Model vs harness vs preferences
+## Harness vs preferences
 
-This repo splits configuration into three layers, from most to least likely to
-change:
+This repo splits configuration into two layers:
 
-1. Model: adjustments for how a particular model behaves, such as prompting
-   conventions or known failure modes. These change with the model.
-2. Harness: configuration tied to one agent runtime, such as claude-code's
+1. Harness: configuration tied to one agent runtime, such as claude-code's
    `settings.json`, hook wiring and file locations. Switching harnesses means
    rewriting this layer.
-3. Preferences: the conventions I apply when writing and reviewing code,
-   whatever the model or harness. They live in `AGENTS.md` and `rules/` and
-   should outlive the other two layers.
+2. Preferences: the conventions I apply when writing and reviewing code,
+   whatever the harness. They live in `AGENTS.md` and `rules/` and should
+   outlive the harness layer.
 
-Keeping the layers separate means a new model or harness only needs its own
-layer written, and the preferences carry over untouched.
+Keeping the layers separate allows to build for a new harness,
+and the preferences carry over untouched.
 
 ## Constraints
+
+For the time being, this only supports claude-code.
+
+| Harness         | Status      |
+| --------------- | ----------- |
+| claude-code     | in-progress |
+| pi-coding-agent | planned     |
+| omp             | planned     |
 
 I am building this out for `claude-code >= 2.1.280`. This version of claude-code
 reads `AGENTS.md` natively.
