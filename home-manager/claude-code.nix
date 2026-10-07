@@ -85,7 +85,10 @@ in
       }
     ];
 
-    programs.claude-code.enable = true;
+    programs.claude-code = {
+      enable = true;
+      package = lib.mkDefault pkgs.claude-code;
+    };
 
     home.file = {
       "${claudeCode.configDir}/CLAUDE.md" = {
