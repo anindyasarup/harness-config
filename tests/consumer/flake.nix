@@ -48,6 +48,12 @@
             hooks.postToolUse = [ "no-such-check" ];
           };
         };
+        rule-without-paths = home {
+          harness.claude-code = {
+            enable = true;
+            rules = ./rules-without-paths;
+          };
+        };
       };
     };
 }
