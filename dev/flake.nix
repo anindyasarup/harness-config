@@ -71,6 +71,8 @@
           ln -sf ${lefthookConfig} .lefthook.yaml
           ln -sf ${rumdlConfig} .rumdl.toml
           lefthook install
+          uv sync --quiet
+          source .venv/bin/activate
         '';
       };
     };
