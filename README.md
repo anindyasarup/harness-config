@@ -11,6 +11,23 @@ and dislikes, per language conventions etc.
 I want to start this out for claude-code to be able expand it for different
 models and harnessess.
 
+## Model vs harness vs preferences
+
+This repo splits configuration into three layers, from most to least likely to
+change:
+
+1. Model: adjustments for how a particular model behaves, such as prompting
+   conventions or known failure modes. These change with the model.
+2. Harness: configuration tied to one agent runtime, such as claude-code's
+   `settings.json`, hook wiring and file locations. Switching harnesses means
+   rewriting this layer.
+3. Preferences: the conventions I apply when writing and reviewing code,
+   whatever the model or harness. They live in `AGENTS.md` and `rules/` and
+   should outlive the other two layers.
+
+Keeping the layers separate means a new model or harness only needs its own
+layer written. The preferences stay as they are.
+
 ## Constraints
 
 I am building this out for `claude-code >= 2.1.280`. This version of claude-code
