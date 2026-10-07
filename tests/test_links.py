@@ -7,4 +7,3 @@ def test_links_the_harness_into_claude_config(activate, in_container):
 
     assert in_container("test", "-f", "/root/.claude/rules/nix.md").returncode == 0
     assert in_container("test", "-x", "/root/.claude/hooks/post-tool-use").returncode == 0
-    assert in_container("test", "-e", "/root/.claude/settings.json").returncode != 0

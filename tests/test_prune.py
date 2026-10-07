@@ -11,8 +11,7 @@ def seeded_claude_config(in_container):
         " && mkdir -p /root/.claude/rules /root/.claude/hooks /root/.claude/skills/stale /root/.claude/skills/synced/kept"
         " && cd /root/.claude"
         " && touch CLAUDE.md rules/old.md hooks/old.sh skills/stale/SKILL.md skills/synced/kept/SKILL.md"
-        " && ln -s /tmp skills/foreign"
-        " && echo '{}' > settings.json",
+        " && ln -s /tmp skills/foreign",
     )
     yield
     in_container("rm", "-rf", "/root/.claude")
@@ -55,7 +54,6 @@ def test_prunes_what_it_replaces(seeded_claude_config, activate, in_container):
     assert hook.endswith("/bin/claude-code-post-tool-use"), hook
 
     assert present("skills/synced/kept/SKILL.md")
-    assert in_container("cat", "/root/.claude/settings.json").stdout == "{}\n"
 
 
 def test_activating_again_after_pruning_changes_nothing(seeded_claude_config, activate, in_container):

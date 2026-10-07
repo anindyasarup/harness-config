@@ -71,3 +71,18 @@ def test_post_tool_use_hook(on_disk, tool_input, reason, activate, in_container)
         decision = json.loads(hook.stdout)
         assert decision["decision"] == "block", decision
         assert reason in decision["reason"], decision["reason"]
+
+
+def test_registers_the_hook_in_settings_json(activate, in_container):
+    activate("test")
+
+    settings = json.loads(in_container("cat", "/root/.claude/settings.json").stdout)
+
+    assert settings["hooks"] == {
+        "PostToolUse": [
+            {
+                "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+                "hooks": [{"type": "command", "command": "/root/.claude/hooks/post-tool-use"}],
+            }
+        ]
+    }

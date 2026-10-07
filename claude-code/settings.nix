@@ -1,3 +1,4 @@
+{ configDir }:
 {
   model = "sonnet";
   effortLevel = "medium";
@@ -27,7 +28,7 @@
         hooks = [
           {
             type = "command";
-            command = "$HOME/.claude/hooks/post-tool-use";
+            command = "${configDir}/hooks/post-tool-use";
           }
         ];
       }

@@ -88,6 +88,7 @@ in
     programs.claude-code = {
       enable = true;
       package = lib.mkDefault pkgs.claude-code;
+      settings = import ../claude-code/settings.nix { inherit (claudeCode) configDir; };
     };
 
     home.file = {
