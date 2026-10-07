@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-[ -n "$CLAUDE_ALLOW_COMMENTS" ] && exit 0
+[ -n "$ALLOW_COMMENTS" ] && exit 0
 
 f=$1
 added=$(cat)
@@ -84,4 +84,4 @@ done <<< "$top"
 [ "$n" -gt 5 ] && report="${report}  ... and $((n - 5)) more"$'\n'
 
 printf '%s comment(s) introduced in %s:\n%s\n%s\n' "$n" "$f" "$report" \
-  'Move non-obvious "why" context to docs/adr/ (design decisions) or the project'\''s CLAUDE.md/AGENTS.md (standing constraints); otherwise delete it. Load-bearing directives (shebang, shellcheck, eslint, build tags) are already exempt, so these are not that.'
+  'Move non-obvious "why" context to docs/adr/ (design decisions) or the project'\''s AGENTS.md (standing constraints); otherwise delete it. Load-bearing directives (shebang, shellcheck, eslint, build tags) are already exempt, so these are not that.'
