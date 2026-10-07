@@ -18,6 +18,17 @@ def seeded_claude_config(in_container):
     in_container("rm", "-rf", "/root/.claude")
 
 
+def test_does_nothing_unless_enabled(seeded_claude_config, activate, in_container):
+    def listing():
+        return in_container("find", "/root/.claude", "-exec", "stat", "-c", "%n %F %Y", "{}", "+").stdout
+
+    before = listing()
+
+    activate("disabled")
+
+    assert listing() == before
+
+
 def test_prunes_what_it_replaces(seeded_claude_config, activate, in_container):
     def present(path):
         return in_container("ls", "-d", f"/root/.claude/{path}").returncode == 0
