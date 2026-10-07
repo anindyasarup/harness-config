@@ -9,7 +9,8 @@ def just(*args):
 
 @pytest.fixture(scope="session", autouse=True)
 def container():
-    """Starts the nixos/nix container before the first test and stops it after the last."""
+    """Starts a fresh nixos/nix container before the first test, replacing any left running, and stops it after the last."""
+    just("down")
     up = just("up")
     assert up.returncode == 0, up.stderr
     yield
