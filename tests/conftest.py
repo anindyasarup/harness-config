@@ -18,6 +18,12 @@ def container():
 
 
 @pytest.fixture
+def build(container):
+    """Builds a homeConfigurations.<config> from the consumer flake inside the container without activating it, and returns the result."""
+    return lambda config: just("build", config)
+
+
+@pytest.fixture
 def activate(container):
     """Builds and activates a homeConfigurations.<config> from the consumer flake inside the container."""
 

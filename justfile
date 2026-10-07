@@ -31,6 +31,13 @@ up: copy
       {{ image }} sleep infinity
     container exec {{ name }} rm /root/.nix-profile
 
+[doc('build a consumer homeConfiguration inside the container without activating it')]
+[group('in-container')]
+build config:
+    container exec {{ name }} nix build --no-link --no-write-lock-file \
+      --override-input harness-config path:/harness-config \
+      /consumer#homeConfigurations.{{ config }}.activationPackage
+
 [doc('build and activate a consumer homeConfiguration inside the container')]
 [group('in-container')]
 activate config:

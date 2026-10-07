@@ -42,6 +42,12 @@
       homeConfigurations = {
         test = home { harness.claude-code.enable = true; };
         disabled = home { programs.claude-code.enable = true; };
+        unknown-hook = home {
+          harness.claude-code = {
+            enable = true;
+            hooks.postToolUse = [ "no-such-check" ];
+          };
+        };
       };
     };
 }
