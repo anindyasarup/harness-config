@@ -1,5 +1,11 @@
 # Improvements
 
+## Per-language rules
+
+`preferences/instructions/rules/` still needs `shell`, `dotnet`,
+`SQL` and each language's naming conventions
+(`AGENTS.md` falls back to them after the codebase's own).
+
 ## End-to-end test for the hooks
 
 Banked: an end-to-end test that runs each hook through claude-code.
