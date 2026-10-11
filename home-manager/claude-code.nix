@@ -41,9 +41,9 @@ in
   options.harness.claude-code = {
     enable = lib.mkEnableOption ''
       Claude Code with these instructions, rules, skills, hooks and MCP servers. Replaces
-      settings.json, CLAUDE.md, rules/, hooks/ and every skill in the Claude config directory
-      except skills/synced; anything else there, and agents/, commands/ and output-styles/,
-      is deleted on activation
+      settings.json, keybindings.json, CLAUDE.md, rules/, hooks/ and every skill in the
+      Claude config directory except skills/synced; anything else there, and agents/,
+      commands/ and output-styles/, is deleted on activation
     '';
 
     instructions = lib.mkOption {
@@ -106,6 +106,12 @@ in
     home.file = {
       "${claudeCode.configDir}/settings.json".force = true;
       "${claudeCode.configDir}/skills/claude-code-home-manager".force = true;
+      "${claudeCode.configDir}/keybindings.json" = {
+        source = (pkgs.formats.json { }).generate "claude-code-keybindings.json" (
+          import ../claude-code/keybindings.nix
+        );
+        force = true;
+      };
       "${claudeCode.configDir}/CLAUDE.md" = {
         source = cfg.instructions;
         force = true;

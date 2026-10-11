@@ -25,6 +25,24 @@ def test_activation_replaces_a_mutated_settings_json(activate, in_container):
     assert in_container("cat", "/root/.claude/settings.json").stdout == declared
 
 
+def test_activation_replaces_a_mutated_keybindings_json(activate, in_container):
+    activate("test")
+
+    in_container(
+        "sh",
+        "-c",
+        "rm -f /root/.claude/keybindings.json"
+        " && echo '{\"bindings\": [{\"context\": \"Confirmation\", \"bindings\": {\"y\": \"confirm:yes\"}}]}'"
+        " > /root/.claude/keybindings.json",
+    )
+
+    activate("test")
+
+    target = in_container("readlink", "-f", "/root/.claude/keybindings.json")
+    assert target.stdout.startswith("/nix/store/"), (target.stdout, target.stderr)
+    assert json.loads(in_container("cat", "/root/.claude/keybindings.json").stdout)["bindings"] == []
+
+
 def test_activation_replaces_a_mutated_mcp_server_list(activate, in_container):
     plugin = "/root/.claude/skills/claude-code-home-manager"
 

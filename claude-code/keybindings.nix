@@ -1,0 +1,4 @@
+{
+  "$schema" = "https://www.schemastore.org/claude-code-keybindings.json";
+  bindings = [ ];
+}
