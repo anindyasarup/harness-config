@@ -29,7 +29,7 @@ def activate(container):
 
     def run(config):
         activated = just("activate", config)
-        assert activated.returncode == 0, activated.stderr
+        assert activated.returncode == 0, activated.stdout + activated.stderr
 
     return run
 
