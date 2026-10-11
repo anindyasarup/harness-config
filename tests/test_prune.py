@@ -72,3 +72,15 @@ def test_activating_again_after_pruning_changes_nothing(seeded_claude_config, ac
     activate("test")
 
     assert listing() == before
+
+
+def test_removes_agents_commands_and_output_styles(activate, in_container):
+    activate("test")
+
+    for path in ["agents/reviewer.md", "commands/deploy.md", "output-styles/terse.md"]:
+        in_container("sh", "-c", f"mkdir -p $(dirname /root/.claude/{path}) && touch /root/.claude/{path}")
+
+    activate("test")
+
+    for path in ["agents", "commands", "output-styles"]:
+        assert in_container("ls", "-d", f"/root/.claude/{path}").returncode != 0, path

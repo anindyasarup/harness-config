@@ -29,6 +29,9 @@ let
       "CLAUDE.md"
       "rules"
       "hooks"
+      "agents"
+      "commands"
+      "output-styles"
     ];
     dirs = [ "skills" ];
     keep = [ "skills/synced" ];
@@ -39,7 +42,8 @@ in
     enable = lib.mkEnableOption ''
       Claude Code with these instructions, rules, skills and hooks. Replaces
       settings.json, CLAUDE.md, rules/, hooks/ and every skill in the Claude config directory
-      except skills/synced; anything else there is deleted on activation
+      except skills/synced; anything else there, and agents/, commands/ and output-styles/,
+      is deleted on activation
     '';
 
     instructions = lib.mkOption {
