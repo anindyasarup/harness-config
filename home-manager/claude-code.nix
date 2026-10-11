@@ -83,6 +83,10 @@ in
           claudeCode.package == null || lib.versionAtLeast (lib.getVersion claudeCode.package) minVersion;
         message = "harness-config targets claude-code >= ${minVersion}, got ${lib.getVersion claudeCode.package}";
       }
+      {
+        assertion = !claudeCode.mutableSettings;
+        message = "harness-config replaces settings.json, so programs.claude-code.mutableSettings must be false; it would keep settings removed from claude-code/settings.nix";
+      }
     ];
 
     programs.claude-code = {

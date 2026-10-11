@@ -48,6 +48,10 @@
             hooks.postToolUse = [ "no-such-check" ];
           };
         };
+        mutable-settings = home {
+          harness.claude-code.enable = true;
+          programs.claude-code.mutableSettings = true;
+        };
         rule-without-paths = home {
           harness.claude-code = {
             enable = true;
