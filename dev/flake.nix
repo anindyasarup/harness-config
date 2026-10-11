@@ -1,5 +1,5 @@
 {
-  description = "dev shell for harness-config";
+  description = "Internal test flake for harness-config";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
