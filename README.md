@@ -43,7 +43,7 @@ There are three types of configuration that will kickstart my journey.
 
 | Type             | Symlink                                                               |
 | ---------------- | --------------------------------------------------------------------- |
-| settings.json    | No. claude mutates this file.                                         |
+| settings.json    | Yes. Built from `claude-code/settings.nix`, claude can't mutate it    |
 | instructions     | Yes. claude only reads these, for ex: `AGENTS.md`, `rules/`, `skills` |
 | states & secrets | No. Never track these either, for ex: sessions, history, cache etc    |
 

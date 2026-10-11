@@ -38,7 +38,7 @@ in
   options.harness.claude-code = {
     enable = lib.mkEnableOption ''
       Claude Code with these instructions, rules, skills and hooks. Replaces
-      CLAUDE.md, rules/, hooks/ and every skill in the Claude config directory
+      settings.json, CLAUDE.md, rules/, hooks/ and every skill in the Claude config directory
       except skills/synced; anything else there is deleted on activation
     '';
 
@@ -92,6 +92,7 @@ in
     };
 
     home.file = {
+      "${claudeCode.configDir}/settings.json".force = true;
       "${claudeCode.configDir}/CLAUDE.md" = {
         source = cfg.instructions;
         force = true;
