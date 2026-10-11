@@ -68,6 +68,7 @@
         ];
 
         shellHook = ''
+          find . -maxdepth 1 -name '.*' -type l -lname '/nix/store/*' -delete
           ln -sf ${lefthookConfig} .lefthook.yaml
           ln -sf ${rumdlConfig} .rumdl.toml
           lefthook install
