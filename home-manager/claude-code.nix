@@ -40,7 +40,7 @@ in
 {
   options.harness.claude-code = {
     enable = lib.mkEnableOption ''
-      Claude Code with these instructions, rules, skills, hooks and MCP servers. Replaces
+      Claude Code with these instructions, rules, skills and hooks. Replaces
       settings.json, keybindings.json, CLAUDE.md, rules/, hooks/ and every skill in the
       Claude config directory except skills/synced; anything else there, and agents/,
       commands/ and output-styles/, is deleted on activation
@@ -97,15 +97,10 @@ in
       enable = true;
       package = lib.mkDefault null;
       settings = import ../claude-code/settings.nix { inherit (claudeCode) configDir; };
-      mcpServers.nixos = {
-        command = "uvx";
-        args = [ "mcp-nixos" ];
-      };
     };
 
     home.file = {
       "${claudeCode.configDir}/settings.json".force = true;
-      "${claudeCode.configDir}/skills/claude-code-home-manager".force = true;
       "${claudeCode.configDir}/keybindings.json" = {
         source = (pkgs.formats.json { }).generate "claude-code-keybindings.json" (
           import ../claude-code/keybindings.nix

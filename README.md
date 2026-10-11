@@ -49,6 +49,7 @@ claude-code config directory.
 | Deleted       | Skills it doesn't declare except `skills/synced`, `agents/`, `commands/`, `output-styles/` |
 | Settings      | `programs.claude-code.mutableSettings` has to stay `false`                                 |
 | Version check | Only runs when claude-code comes from `programs.claude-code.package`                       |
+| MCP servers   | Not managed. I add them with `claude mcp add`, and claude-code keeps them                  |
 
 Add it as an input to the flake that builds my machines. It has no `nixpkgs`
 input, so there's nothing to `follows`:
