@@ -26,7 +26,7 @@
             config.allowUnfreePredicate = pkg: nixpkgs.lib.getName pkg == "claude-code";
           };
           modules = [
-            harness-config.homeManagerModules.default
+            harness-config.homeModules.default
             {
               home = {
                 username = "root";

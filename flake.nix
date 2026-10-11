@@ -14,7 +14,11 @@
 
   outputs =
     { humanizer, mattpocock-skills, ... }:
+    let
+      module = import ./home-manager { inherit humanizer mattpocock-skills; };
+    in
     {
-      homeManagerModules.default = import ./home-manager { inherit humanizer mattpocock-skills; };
+      homeModules.default = module;
+      homeManagerModules.default = module;
     };
 }

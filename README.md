@@ -61,7 +61,7 @@ inputs.harness-config.url = "github:anindyasarup/harness-config";
 Hand the module to home-manager, next to `home-manager.users.<me>`:
 
 ```nix
-home-manager.sharedModules = [ harness-config.homeManagerModules.default ];
+home-manager.sharedModules = [ harness-config.homeModules.default ];
 ```
 
 Then turn on claude-code in a home module, and install it if I haven't
