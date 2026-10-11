@@ -1,16 +1,14 @@
 import json
 
 
-def test_installs_claude_code(activate, in_container):
+def test_doesnt_install_claude_code(activate, in_container):
     activate("test")
 
-    version = in_container("claude", "--version")
-    assert version.returncode == 0, version.stderr
-    assert "(Claude Code)" in version.stdout
+    assert in_container("claude", "--version").returncode != 0
 
 
 def test_claude_code_loads_every_linked_skill(activate, in_container):
-    activate("test")
+    activate("with-claude-code")
 
     linked = in_container("ls", "/root/.claude/skills").stdout.split()
     session = in_container("claude", "-p", "--output-format", "stream-json", "--verbose", "hi")
@@ -22,7 +20,7 @@ def test_claude_code_loads_every_linked_skill(activate, in_container):
 
 
 def test_claude_code_loads_agents_md_as_claude_md(activate, in_container):
-    activate("test")
+    activate("with-claude-code")
 
     context = in_container("claude", "-p", "/context")
     claude_md = in_container("cat", "/root/.claude/CLAUDE.md")

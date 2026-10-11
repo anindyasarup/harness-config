@@ -95,7 +95,7 @@ in
 
     programs.claude-code = {
       enable = true;
-      package = lib.mkDefault pkgs.claude-code;
+      package = lib.mkDefault null;
       settings = import ../claude-code/settings.nix { inherit (claudeCode) configDir; };
       mcpServers.nixos = {
         command = "uvx";

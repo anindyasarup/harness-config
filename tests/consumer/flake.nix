@@ -41,6 +41,13 @@
     {
       homeConfigurations = {
         test = home { harness.claude-code.enable = true; };
+        with-claude-code = home (
+          { pkgs, ... }:
+          {
+            harness.claude-code.enable = true;
+            programs.claude-code.package = pkgs.claude-code;
+          }
+        );
         disabled = home { programs.claude-code.enable = true; };
         unknown-hook = home {
           harness.claude-code = {

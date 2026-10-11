@@ -37,6 +37,48 @@ For the time being, this only supports claude-code.
 I am building this out for `claude-code >= 2.1.280`. This version of claude-code
 reads `AGENTS.md` natively.
 
+## Setup
+
+**WARNING: Read what it replaces first.** Once on, this owns most of the
+claude-code config directory.
+
+| Heads up      | Details                                                                                    |
+| ------------- | ------------------------------------------------------------------------------------------ |
+| Harnesses     | Never installed from here. I install claude-code myself.                                   |
+| Replaced      | `settings.json`, `keybindings.json`, `CLAUDE.md`, `rules/`, `hooks/`                       |
+| Deleted       | Skills it doesn't declare except `skills/synced`, `agents/`, `commands/`, `output-styles/` |
+| Settings      | `programs.claude-code.mutableSettings` has to stay `false`                                 |
+| Version check | Only runs when claude-code comes from `programs.claude-code.package`                       |
+
+Add it as an input to the flake that builds my machines. It has no `nixpkgs`
+input, so there's nothing to `follows`:
+
+```nix
+inputs.harness-config.url = "github:anindyasarup/harness-config";
+```
+
+Hand the module to home-manager, next to `home-manager.users.<me>`:
+
+```nix
+home-manager.sharedModules = [ harness-config.homeManagerModules.default ];
+```
+
+Then turn on claude-code in a home module, and install it if I haven't
+already:
+
+```nix
+{ pkgs, ... }:
+{
+  harness.claude-code.enable = true;
+  programs.claude-code.package = pkgs.claude-code;
+}
+```
+
+It sets up `~/.claude`. If claude-code's config lives somewhere else, I set
+`programs.claude-code.configDir` to that path.
+
+Rebuild, and claude-code picks it up on its next start.
+
 ## Configurations
 
 There are three types of configuration that will kickstart my journey.
