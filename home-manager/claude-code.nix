@@ -10,7 +10,7 @@ let
   mattpocockSkills = lib.listToAttrs (
     map (
       path: lib.nameValuePair (baseNameOf path) "${mattpocock-skills}/${lib.removePrefix "./" path}"
-    ) (lib.filter (path: baseNameOf path != "code-review") mattpocockPlugin.skills)
+    ) mattpocockPlugin.skills
   );
   cfg = config.harness.claude-code;
   claudeCode = config.programs.claude-code;
@@ -66,7 +66,7 @@ in
         inherit humanizer;
       }
       // mattpocockSkills;
-      defaultText = lib.literalExpression "{ humanizer = <github:blader/humanizer>; } // <the skills in github:mattpocock/skills's Claude Code plugin, except code-review>";
+      defaultText = lib.literalExpression "{ humanizer = <github:blader/humanizer>; } // <the skills in github:mattpocock/skills's Claude Code plugin>";
       description = "Skill directories, each linked as skills/<name>.";
     };
 
