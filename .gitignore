@@ -1,5 +1,5 @@
 .DS_Store
-.lefthook.yaml
+/.pre-commit-config.yaml
 .rumdl.toml
 .rumdl_cache
 .container
