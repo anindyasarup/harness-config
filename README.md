@@ -37,6 +37,8 @@ For the time being, this only supports claude-code.
 I am building this out for `claude-code >= 2.1.280`. This version of claude-code
 reads `AGENTS.md` natively.
 
+It needs home-manager unstable for `programs.claude-code.mutableSettings`.
+
 ## Setup
 
 **WARNING: Read what it replaces first.** Once on, this owns most of the
