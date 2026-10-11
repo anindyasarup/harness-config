@@ -30,7 +30,7 @@ For the time being, this only supports claude-code.
 
 | Harness         | Status      |
 | --------------- | ----------- |
-| claude-code     | in-progress |
+| claude-code     | completed   |
 | pi-coding-agent | planned     |
 | omp             | planned     |
 
