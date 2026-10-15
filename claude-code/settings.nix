@@ -7,6 +7,8 @@
 
   theme = "auto";
 
+  defaultToAgentsView = true;
+
   tui = "fullscreen";
   editorMode = "normal";
   autoScrollEnabled = true;
