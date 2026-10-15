@@ -50,7 +50,7 @@ claude-code config directory.
 | Replaced      | `settings.json`, `keybindings.json`, `CLAUDE.md`, `rules/`, `hooks/`                       |
 | Deleted       | Skills it doesn't declare except `skills/synced`, `agents/`, `commands/`, `output-styles/` |
 | Settings      | `programs.claude-code.mutableSettings` has to stay `false`                                 |
-| Version check | Only runs when claude-code comes from `programs.claude-code.package`                       |
+| Version check | Only runs when claude-code comes from `programs.claude-code.package`, warns otherwise      |
 | MCP servers   | Not managed. I add them with `claude mcp add`, and claude-code keeps them                  |
 
 Add it as an input to the flake that builds my machines. It has no `nixpkgs`
@@ -89,7 +89,8 @@ NixOS uses `nixpkgs.lib.nixosSystem` with
 `harness-config.nixosModules.default`.
 
 Then turn on claude-code in a home module, and install it if I haven't
-already:
+already. If claude-code is also in `home.packages`, I take it out of there, or
+two copies get installed:
 
 ```nix
 { pkgs, ... }:

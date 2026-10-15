@@ -17,3 +17,17 @@ def test_rejects_mutable_settings(build):
 
     assert built.returncode != 0
     assert "programs.claude-code.mutableSettings" in built.stderr, built.stderr
+
+
+def test_warns_that_the_version_check_is_skipped_without_a_package(build):
+    built = build("test")
+
+    assert built.returncode == 0, built.stderr
+    assert "skips the claude-code version check" in built.stderr, built.stderr
+
+
+def test_checks_the_version_quietly_with_a_package(build):
+    built = build("with-claude-code")
+
+    assert built.returncode == 0, built.stderr
+    assert "skips the claude-code version check" not in built.stderr, built.stderr

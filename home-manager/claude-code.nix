@@ -93,6 +93,10 @@ in
       }
     ];
 
+    warnings =
+      lib.optional (claudeCode.package == null)
+        "harness-config skips the claude-code version check (>= ${minVersion}) because programs.claude-code.package is null. Set it to run the check, and remove claude-code from home.packages if it's there.";
+
     programs.claude-code = {
       enable = true;
       package = lib.mkDefault null;
