@@ -60,6 +60,15 @@ input, so there's nothing to `follows`:
 inputs.harness-config.url = "github:anindyasarup/harness-config";
 ```
 
+The default skills come from two third-party inputs, `humanizer` and
+`mattpocock-skills`, at the revisions in this repo's `flake.lock`. To pin or
+swap either one without forking, I override it in the flake that builds my
+machines:
+
+```nix
+inputs.harness-config.inputs.humanizer.url = "github:blader/humanizer/<rev>";
+```
+
 Hand the module to home-manager. Where it goes depends on how home-manager is
 integrated:
 
