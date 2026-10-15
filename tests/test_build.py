@@ -19,6 +19,13 @@ def test_rejects_mutable_settings(build):
     assert "programs.claude-code.mutableSettings" in built.stderr, built.stderr
 
 
+def test_rejects_stable_home_manager(build):
+    built = build("stable-home-manager")
+
+    assert built.returncode != 0
+    assert "harness-config needs home-manager unstable" in built.stderr, built.stderr
+
+
 def test_warns_that_the_version_check_is_skipped_without_a_package(build):
     built = build("test")
 

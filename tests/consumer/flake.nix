@@ -7,6 +7,10 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    home-manager-stable = {
+      url = "github:nix-community/home-manager/release-26.05";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nix-darwin = {
       url = "github:nix-darwin/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -18,13 +22,14 @@
     {
       nixpkgs,
       home-manager,
+      home-manager-stable,
       nix-darwin,
       harness-config,
       ...
     }:
     let
-      home =
-        module:
+      homeWith =
+        home-manager: module:
         home-manager.lib.homeManagerConfiguration {
           pkgs = import nixpkgs {
             system = "aarch64-linux";
@@ -42,6 +47,7 @@
             module
           ];
         };
+      home = homeWith home-manager;
       alice = {
         home-manager.users.alice = {
           harness.claude-code.enable = true;
@@ -97,6 +103,7 @@
           harness.claude-code.enable = true;
           programs.claude-code.mutableSettings = true;
         };
+        stable-home-manager = homeWith home-manager-stable { harness.claude-code.enable = true; };
         rule-without-paths = home {
           harness.claude-code = {
             enable = true;

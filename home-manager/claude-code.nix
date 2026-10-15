@@ -1,6 +1,7 @@
 { humanizer, mattpocock-skills }:
 {
   config,
+  options,
   lib,
   pkgs,
   ...
@@ -88,7 +89,11 @@ in
         message = "harness-config targets claude-code >= ${minVersion}, got ${lib.getVersion claudeCode.package}";
       }
       {
-        assertion = !claudeCode.mutableSettings;
+        assertion = options.programs.claude-code ? mutableSettings;
+        message = "harness-config needs home-manager unstable: this release has no programs.claude-code.mutableSettings";
+      }
+      {
+        assertion = !(claudeCode.mutableSettings or false);
         message = "harness-config replaces settings.json, so programs.claude-code.mutableSettings must be false; it would keep settings removed from claude-code/settings.nix";
       }
     ];
