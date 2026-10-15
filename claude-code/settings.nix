@@ -7,14 +7,11 @@
 
   theme = "auto";
 
-  defaultToAgentsView = true;
-
   tui = "fullscreen";
   editorMode = "normal";
   autoScrollEnabled = true;
 
   autoMemoryEnabled = false;
-  remoteControlAtStartup = false;
 
   attribution = {
     commit = "";

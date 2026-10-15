@@ -20,6 +20,27 @@ let
   hooksDir = pkgs.linkFarm "claude-code-hooks" {
     post-tool-use = lib.getExe (hooks.claude-code cfg.hooks.postToolUse);
   };
+  globalConfigFile = "${
+    config.home.sessionVariables.CLAUDE_CONFIG_DIR or config.home.homeDirectory
+  }/.claude.json";
+  setGlobalConfig = pkgs.writeShellApplication {
+    name = "claude-code-set-global-config";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.jq
+    ];
+    text = ''
+      file=$1
+      touch "$file"
+      updated=$(mktemp "$file.XXXXXX")
+      jq --slurp --slurpfile settings ${
+        (pkgs.formats.json { }).generate "claude-code-global-config.json" (
+          import ../claude-code/global-config.nix
+        )
+      } '(.[0] // {}) * $settings[0]' "$file" > "$updated"
+      mv "$updated" "$file"
+    '';
+  };
   rules = pkgs.callPackage ./lib/rules.nix {
     harness = "claude-code";
     src = cfg.rules;
@@ -137,10 +158,13 @@ in
       }
     ) cfg.skills;
 
-    home.activation.pruneClaudeConfig =
-      lib.hm.dag.entryBetween [ "linkGeneration" ] [ "writeBoundary" ]
-        ''
-          run ${lib.getExe prune} ${lib.escapeShellArg claudeCode.configDir}
-        '';
+    home.activation = {
+      pruneClaudeConfig = lib.hm.dag.entryBetween [ "linkGeneration" ] [ "writeBoundary" ] ''
+        run ${lib.getExe prune} ${lib.escapeShellArg claudeCode.configDir}
+      '';
+      setClaudeGlobalConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        run ${lib.getExe setGlobalConfig} ${lib.escapeShellArg globalConfigFile}
+      '';
+    };
   };
 }

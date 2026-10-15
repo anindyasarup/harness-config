@@ -49,6 +49,7 @@ claude-code config directory.
 | Harnesses     | Never installed from here. I install claude-code myself.                                   |
 | Replaced      | `settings.json`, `keybindings.json`, `CLAUDE.md`, `rules/`, `hooks/`                       |
 | Deleted       | Skills it doesn't declare except `skills/synced`, `agents/`, `commands/`, `output-styles/` |
+| Merged        | `.claude.json`: sets the keys from `claude-code/global-config.nix`, keeps the rest         |
 | Settings      | `programs.claude-code.mutableSettings` has to stay `false`                                 |
 | Version check | Only runs when claude-code comes from `programs.claude-code.package`, warns otherwise      |
 | MCP servers   | Not managed. I add them with `claude mcp add`, and claude-code keeps them                  |
@@ -127,6 +128,7 @@ There are three types of configuration that will kickstart my journey.
 | Type             | Symlink                                                               |
 | ---------------- | --------------------------------------------------------------------- |
 | settings.json    | Yes. Built from `claude-code/settings.nix`, claude can't mutate it    |
+| .claude.json     | No. Sets keys from `claude-code/global-config.nix`, keeps the rest    |
 | instructions     | Yes. claude only reads these, for ex: `AGENTS.md`, `rules/`, `skills` |
 | states & secrets | No. Never track these either, for ex: sessions, history, cache etc    |
 

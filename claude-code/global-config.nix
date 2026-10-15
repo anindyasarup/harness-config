@@ -1,0 +1,4 @@
+{
+  defaultToAgentsView = true;
+  remoteControlAtStartup = false;
+}
