@@ -100,6 +100,12 @@ two copies get installed:
 }
 ```
 
+claude-code is unfree, so the nixpkgs that home-manager uses has to allow it:
+
+```nix
+nixpkgs.config.allowUnfreePredicate = pkg: lib.getName pkg == "claude-code";
+```
+
 It sets up `~/.claude`. If claude-code's config lives somewhere else, I set
 `programs.claude-code.configDir` to that path.
 
