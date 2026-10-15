@@ -20,5 +20,11 @@
     {
       homeModules.default = module;
       homeManagerModules.default = module;
+      darwinModules.default = {
+        home-manager.sharedModules = [ module ];
+      };
+      nixosModules.default = {
+        home-manager.sharedModules = [ module ];
+      };
     };
 }

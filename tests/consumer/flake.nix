@@ -7,6 +7,10 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-darwin = {
+      url = "github:nix-darwin/nix-darwin";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     harness-config.url = "path:/harness-config";
   };
 
@@ -14,6 +18,7 @@
     {
       nixpkgs,
       home-manager,
+      nix-darwin,
       harness-config,
       ...
     }:
@@ -37,8 +42,41 @@
             module
           ];
         };
+      alice = {
+        home-manager.users.alice = {
+          harness.claude-code.enable = true;
+          home.stateVersion = "26.05";
+        };
+      };
     in
     {
+      nixosConfigurations.harness = nixpkgs.lib.nixosSystem {
+        modules = [
+          home-manager.nixosModules.home-manager
+          harness-config.nixosModules.default
+          alice
+          {
+            nixpkgs.hostPlatform = "aarch64-linux";
+            boot.isContainer = true;
+            users.users.alice.isNormalUser = true;
+            system.stateVersion = "26.05";
+          }
+        ];
+      };
+
+      darwinConfigurations.harness = nix-darwin.lib.darwinSystem {
+        modules = [
+          home-manager.darwinModules.home-manager
+          harness-config.darwinModules.default
+          alice
+          {
+            nixpkgs.hostPlatform = "aarch64-darwin";
+            users.users.alice.home = "/Users/alice";
+            system.stateVersion = 6;
+          }
+        ];
+      };
+
       homeConfigurations = {
         test = home { harness.claude-code.enable = true; };
         with-claude-code = home (

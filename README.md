@@ -60,11 +60,33 @@ input, so there's nothing to `follows`:
 inputs.harness-config.url = "github:anindyasarup/harness-config";
 ```
 
-Hand the module to home-manager, next to `home-manager.users.<me>`:
+Hand the module to home-manager. Where it goes depends on how home-manager is
+integrated:
+
+| Host                    | Where the module goes                                   |
+| ----------------------- | ------------------------------------------------------- |
+| standalone home-manager | `homeManagerConfiguration { modules = [ ... ]; }`       |
+| nix-darwin              | `harness-config.darwinModules.default` in the system    |
+| NixOS                   | `harness-config.nixosModules.default` in the system     |
+
+`tests/consumer/flake.nix` is the reference for all three.
+
+On nix-darwin and NixOS, the system module adds
+`harness-config.homeModules.default` to `home-manager.sharedModules`. That
+option comes from home-manager's own system module, so import both:
 
 ```nix
-home-manager.sharedModules = [ harness-config.homeModules.default ];
+darwinConfigurations.personal = nix-darwin.lib.darwinSystem {
+  modules = [
+    home-manager.darwinModules.home-manager
+    harness-config.darwinModules.default
+  ];
+};
 ```
+
+NixOS uses `nixpkgs.lib.nixosSystem` with
+`home-manager.nixosModules.home-manager` and
+`harness-config.nixosModules.default`.
 
 Then turn on claude-code in a home module, and install it if I haven't
 already:
