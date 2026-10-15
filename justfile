@@ -3,6 +3,7 @@ image := "docker.io/nixos/nix:2.34.4"
 name := "harness-config"
 source := justfile_directory() / ".e2e"
 consumer := justfile_directory() / "tests" / "consumer"
+interface_dir := justfile_directory() / ".interface"
 
 [doc('list recipes')]
 default:
@@ -70,6 +71,27 @@ update-consumer: copy
       --mount type=bind,source={{ consumer }},target=/consumer \
       --env "NIX_CONFIG=experimental-features = nix-command flakes" \
       {{ image }} nix flake update --flake /consumer
+
+[doc('print the flake outputs, harness options and replaced files that consumers depend on at a git ref')]
+[group('release')]
+interface ref:
+    rm -rf {{ interface_dir }}/{{ ref }}
+    mkdir -p {{ interface_dir }}/{{ ref }}
+    git archive {{ ref }} | tar -x -C {{ interface_dir }}/{{ ref }}
+    container run --rm --memory 2G \
+      --mount type=bind,source={{ interface_dir }}/{{ ref }},target=/harness-config,readonly \
+      --mount type=bind,source={{ consumer }},target=/consumer,readonly \
+      --env "NIX_CONFIG=experimental-features = nix-command flakes" \
+      {{ image }} nix eval --raw --no-write-lock-file \
+      --override-input harness-config path:/harness-config /consumer#interface
+
+[doc('show how the interface changed between a git ref and HEAD')]
+[group('release')]
+interface-diff ref:
+    mkdir -p {{ interface_dir }}
+    just interface {{ ref }} > {{ interface_dir }}/{{ ref }}.txt
+    just interface HEAD > {{ interface_dir }}/HEAD.txt
+    diff {{ interface_dir }}/{{ ref }}.txt {{ interface_dir }}/HEAD.txt || [ $? -eq 1 ]
 
 [doc('copy the tracked and unignored files into .e2e')]
 [private]

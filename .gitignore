@@ -6,6 +6,7 @@
 .pytest_cache
 __pycache__
 .e2e
+.interface
 .venv
 .scratch
 

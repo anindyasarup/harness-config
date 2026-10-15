@@ -20,6 +20,7 @@
 
   outputs =
     {
+      self,
       nixpkgs,
       home-manager,
       home-manager-stable,
@@ -111,5 +112,21 @@
           };
         };
       };
+
+      interface =
+        let
+          inherit (nixpkgs) lib;
+          inherit (self.homeConfigurations.test) options config;
+          outputs = lib.concatMap (
+            output: map (name: "output ${output}.${name}") (lib.attrNames harness-config.outputs.${output})
+          ) (lib.attrNames harness-config.outputs);
+          harnessOptions = map (option: "option ${option.name}: ${option.type}") (
+            lib.optionAttrSetToDocList options.harness
+          );
+          replaced = map (file: "replaces ${file.target}") (
+            lib.filter (file: lib.hasPrefix ".claude/" file.target) (lib.attrValues config.home.file)
+          );
+        in
+        lib.concatLines (lib.sort lib.lessThan (outputs ++ harnessOptions ++ replaced));
     };
 }
