@@ -21,6 +21,8 @@
 
   worktree.bgIsolation = "none";
 
+  pluginConfigs."cc-plugin-agents-md@builtin".options.instructionFiles = "claude-md-and-agents-md";
+
   hooks = {
     PostToolUse = [
       {
