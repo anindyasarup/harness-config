@@ -2,6 +2,15 @@
 
 Versions follow [docs/adr/0001-versioning.md](docs/adr/0001-versioning.md).
 
+## 1.2.1
+
+### Fixed
+
+- claude-code opens agent view by default. Since 1.1.0 the setting sat in
+  `settings.json`, where claude-code ignores it. Activation now writes
+  `defaultToAgentsView` and `remoteControlAtStartup` to `.claude.json` and
+  leaves its other keys alone.
+
 ## 1.2.0
 
 ### Added
