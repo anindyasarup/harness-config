@@ -2,6 +2,18 @@
 
 Versions follow [docs/adr/0001-versioning.md](docs/adr/0001-versioning.md).
 
+## 1.2.0
+
+### Added
+
+- The README shows how to pin or swap the `humanizer` or `mattpocock-skills`
+  input from your own flake.
+
+### Changed
+
+- mattpocock-skills moves to `49dd158`, which brings upstream fixes to the
+  `wizard` skill's script template. The other skills are unchanged.
+
 ## 1.1.0
 
 ### Added
