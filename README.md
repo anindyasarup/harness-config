@@ -32,7 +32,7 @@ For the time being, this only supports claude-code.
 | --------------- | ----------- |
 | claude-code     | completed   |
 | pi-coding-agent | planned     |
-| omp             | planned     |
+| omp             | in-progress |
 
 I am building this out for `claude-code >= 2.1.280`. This version of claude-code
 reads `AGENTS.md` natively.
