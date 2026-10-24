@@ -19,5 +19,20 @@ The rules are in `docs/adr/0001-versioning.md`. Read it first.
    Breaking, Added, Changed and Fixed sections that apply. Breaking entries say
    what the consumer has to edit. Leave out changes with level none. Run
    `/humanizer` on the entry.
-7. Stop and show the per-commit levels, the version and the entry. Don't
-   commit, tag or push.
+7. Show the per-commit levels, the version and the entry, then wait for the
+   user's review. The user runs every command that publishes the release.
+8. Once the user approves the entry, write the release notes to a temporary
+   file: the entry without its `## <version>` heading, with each bullet on one
+   line, because GitHub renders a line break inside a bullet. Give the user
+   these commands to run, in order:
+
+   ```sh
+   git commit -m "add(changelog): <version>" -- CHANGELOG.md
+   git tag <version>
+   git push && git push origin <version>
+   gh release create <version> --title <version> --notes-file <notes> --verify-tag
+   ```
+
+   The `-- CHANGELOG.md` pathspec keeps other work in the tree out of the
+   release commit. The release is done when `gh release list` shows `<version>`
+   as Latest.
