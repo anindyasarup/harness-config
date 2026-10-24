@@ -1,1 +1,4 @@
-import ./git.nix
+builtins.concatMap import [
+  ./git.nix
+  ./nix.nix
+]

@@ -48,3 +48,22 @@ def test_claude_code_reports_its_rules_on_top_of_the_built_in_ones(activate, in_
         configured = set(auto_mode[name]) - {"$defaults"}
         assert set(effective[name]) == set(defaults[name]) | configured, name
     assert len(effective["allow"]) > len(defaults["allow"])
+
+
+def test_refuses_activation_lock_file_updates_and_imperative_nix_installs(activate, in_container):
+    deny = settings(activate, in_container)["permissions"]["deny"]
+
+    for rule in [
+        "Bash(darwin-rebuild switch *)",
+        "Bash(home-manager switch *)",
+        "Bash(nix flake update *)",
+        "Edit(//**/flake.lock)",
+        "Bash(nix profile install *)",
+        "Bash(nix profile add *)",
+        "Bash(nix-env -i *)",
+    ]:
+        assert rule in deny, rule
+
+
+def test_asks_before_a_nix_build(activate, in_container):
+    assert "Bash(nix build *)" in settings(activate, in_container)["permissions"]["ask"]
