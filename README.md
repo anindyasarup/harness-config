@@ -39,21 +39,14 @@ reads `AGENTS.md` natively.
 
 It needs home-manager unstable for `programs.claude-code.mutableSettings`.
 
+[Preferences](docs/preferences.md) covers how each preference reaches each
+harness, and [ownership](docs/ownership.md) covers what activation replaces,
+deletes and merges in each harness's folder.
+
 ## Setup
 
-**WARNING: Read what it replaces first.** Once on, this owns most of the
-claude-code config directory.
-
-| Heads up      | Details                                                                                    |
-| ------------- | ------------------------------------------------------------------------------------------ |
-| Harnesses     | Never installed from here. I install claude-code myself.                                   |
-| Replaced      | `settings.json`, `keybindings.json`, `CLAUDE.md`, `rules/`, `hooks/`                       |
-| Deleted       | Skills it doesn't declare except `skills/synced`, `agents/`, `commands/`, `output-styles/` |
-| Merged        | `.claude.json`: sets the keys from `claude-code/global-config.nix`, keeps the rest         |
-| Removed       | `.claude.json` keys a release stops setting, listed in `.claude.json.managed-keys.json`    |
-| Settings      | `programs.claude-code.mutableSettings` has to stay `false`                                 |
-| Version check | Only runs when claude-code comes from `programs.claude-code.package`, warns otherwise      |
-| MCP servers   | Not managed. I add them with `claude mcp add`, and claude-code keeps them                  |
+**WARNING: Read [what it replaces](docs/ownership.md) first.** Once on, this
+owns most of the claude-code config directory.
 
 Add it as an input to the flake that builds my machines. It has no `nixpkgs`
 input, so there's nothing to `follows`:
@@ -63,13 +56,8 @@ inputs.harness-config.url = "github:anindyasarup/harness-config";
 ```
 
 The default skills come from two third-party inputs, `humanizer` and
-`mattpocock-skills`, at the revisions in this repo's `flake.lock`. To pin or
-swap either one without forking, I override it in the flake that builds my
-machines:
-
-```nix
-inputs.harness-config.inputs.humanizer.url = "github:blader/humanizer/<rev>";
-```
+`mattpocock-skills`. To pin or swap them, see
+[Skills](docs/preferences.md#skills).
 
 Hand the module to home-manager. Where it goes depends on how home-manager is
 integrated:
@@ -117,38 +105,11 @@ claude-code is unfree, so the nixpkgs that home-manager uses has to allow it:
 nixpkgs.config.allowUnfreePredicate = pkg: lib.getName pkg == "claude-code";
 ```
 
-It sets up `~/.claude`. If claude-code's config lives somewhere else, I set
-`programs.claude-code.configDir` to that path.
-
 Rebuild, and claude-code picks it up on its next start.
-
-### Managed keys in `.claude.json`
-
-Next to `.claude.json`, activation writes `.claude.json.managed-keys.json`, a
-JSON list of the key paths it set, such as `[["defaultToAgentsView"]]`. On the
-next activation, any key in that list that harness-config no longer sets is
-removed from `.claude.json`, so claude-code falls back to its own default. Keys
-I set myself are never removed, and the first activation, with no record yet,
-removes nothing.
-
-Turning off `harness.claude-code.enable` skips this step, so the managed keys
-stay in `.claude.json`. To clear them, I remove each path listed in the record
-and then the record itself:
-
-```sh
-jq --slurpfile keys ~/.claude.json.managed-keys.json 'delpaths($keys[0])' \
-  ~/.claude.json > ~/.claude.json.tmp && mv ~/.claude.json.tmp ~/.claude.json
-rm ~/.claude.json.managed-keys.json
-```
-
-If `CLAUDE_CONFIG_DIR` is set, both files live there instead of in `~`.
 
 ### omp
 
-Turning omp on merges the settings from
-`omp/settings.nix` into omp's `config.yml`: omp thinks at `medium` effort and
-asks before acting (`always-ask`), like claude-code. It has its own switch, so
-it works with or without claude-code:
+omp has its own switch, so it works with or without claude-code:
 
 ```nix
 { pkgs, ... }:
@@ -158,145 +119,16 @@ it works with or without claude-code:
 }
 ```
 
-Like claude-code, omp is never installed from here.
-
-omp gets the same instructions as claude-code: `harness.omp.instructions`
-(default `preferences/AGENTS.md`) is linked as `AGENTS.md` in omp's agent
-folder, replacing any file already there. omp only reads it, so a read-only
-link is enough.
-
-omp gets the same skills too: each one in `harness.omp.skills` (default the
-same skills as claude-code) is linked as `skills/<name>` in omp's agent folder.
-Activation deletes every other entry in `skills/`, including skills I added by
-hand. Those can live in `~/.agents/skills` instead: omp reads it too, and
-harness-config leaves it alone.
-Pinning or swapping `humanizer` or `mattpocock-skills` changes both harnesses.
-omp skips, without a warning, any skill whose `SKILL.md` has no `description`
-in its frontmatter. Every default skill has one; `omp skill list` shows what omp
-loaded.
-
-omp gets the same rules too. `harness.omp.rules` (default
-`preferences/instructions/rules`) is linked as `rules/` in omp's agent folder,
-and activation first deletes any `rules/` already there, including rules I
-wrote by hand. omp ignores `paths:`, so the build turns each rule's `paths:`
-into a scope on omp's edit and write tools. In a session, omp loads a rule the
-first time it edits or writes a matching file; claude-code also loads it when it
-reads one. As with claude-code, a rule without `paths:` fails the build.
-`omp ttsr list` shows which rules omp loaded.
-
-omp gets the same keybindings too. harness-config doesn't remap any key in
-claude-code, so `keybindings.yml` in omp's agent folder is linked as an empty
-mapping, replacing any file already there, and both harnesses keep their own
-default keys. Since nothing is remapped, no key is missing from omp.
-Translating claude-code's actions to omp's will come with the first remapped
-key. omp only rewrites this file to migrate old action names, and the empty
-mapping has none, so a read-only link is enough.
-
-omp gets the same post-tool-use checks too. `harness.omp.hooks.postToolUse`
-(default `no-comments` and `no-emdash`, as in claude-code) runs on the text omp
-adds with its write and edit tools, whichever edit mode omp is in. `hooks/` in
-omp's agent folder is linked to a TypeScript hook that passes that text to
-claude-code's check runner. Activation first deletes any `hooks/` already
-there, including hooks I wrote by hand. When a check fails, the tool result
-becomes an error with the check's reason added, and the model reads it there.
-As with claude-code, an unknown check name fails the build.
-
-omp refuses, asks about and allows the same commands as claude-code. Each
-command in the permissions rules becomes two of omp's `bash.patterns`, the bare
-command and the command followed by `*`, ordered deny, then prompt, then allow,
-because omp uses the first pattern that matches. Denying the `sh`, `bash` and
-`zsh` segments refuses piping a download into a shell, and
-`tools.approval.eval` makes shells started from omp's eval tool ask first. omp
-has no path or prose rules, so edit and prose rules don't reach it. Never do
-read rules reach it through the read guard below.
-`omp config get bash.patterns` shows the patterns omp uses.
-
-`extensions/harness-read-guard.ts` in omp's agent folder is linked to an
-extension that stops omp reading secrets. It blocks a call to omp's read tool
-or a shell command when the call names a Never do read path from the
-permissions rules (`~/.ssh`, `~/.gnupg`, `~/.aws`, `~/.config/gh/hosts.yml` and
-`~/.netrc`), or a `.env` or `.env.*` file outside the git repo omp runs in.
-Outside a repo, the working folder counts as the repo. The blocked call
-returns the reason as an error, so the model sees it. Reads of other files
-outside the repo still work.
-
-The guard has gaps. It checks each word of a shell command after expanding
-`~`, `$HOME` and `${HOME}`, so a command that reaches a secret through a
-relative path, such as `cd ~ && cat .ssh/id_rsa`, still runs. omp's grep and
-glob tools aren't checked. Activation replaces only
-`extensions/harness-read-guard.ts` and leaves the rest of `extensions/` alone.
-
-omp gets no default model from here. To use a provider subscription such as
-GitHub Copilot, I set `harness.omp.model` to the provider and one of its
-models. Activation writes them to omp's `modelRoles.default` as
-`provider/model`:
-
-```nix
-harness.omp.model = {
-  provider = "github-copilot";
-  model = "claude-sonnet-4.5";
-};
-```
-
-claude-code's model doesn't change. If I leave the option unset, activation
-leaves omp's model alone and removes a model it set earlier. I still log in to
-the provider myself, with `omp login github-copilot` or `/login` inside omp.
-
-As with claude-code, activation also deletes `agents/` and `commands/`, and
-keeps everything else in the agent folder, such as `mcp.json`, the rest of
-`extensions/` and sessions.
-
-omp's agent folder is `~/.omp/agent`. If it lives somewhere else, I set
-`home.sessionVariables.PI_CODING_AGENT_DIR` to that path.
-
-**WARNING:** plain pi reads `PI_CODING_AGENT_DIR` too, and home-manager's
-`programs.pi-coding-agent.configDir` can set it. If it points at pi's folder,
-omp and harness-config both write there.
-
-omp rewrites `config.yml` while it runs, so it stays a regular file instead of
-a link. Each activation sets the managed keys again, keeps everything else
-(such as my theme or onboarding answers), and creates the file if it's
-missing. If `config.yml` isn't valid YAML, or its root isn't a mapping,
-activation fails and leaves the file alone. omp's onboarding wizard still runs
-on first launch.
-
-Activation lists the key paths it set in `config.yml.managed-keys.json`, as it
-does for `.claude.json`. When a release stops setting a key, the next
-activation removes it and omp falls back to its own default. Turning off
-`harness.omp.enable` skips this step and leaves both files alone. To clear the
-managed keys, I remove each
-path listed in the record with yq (`yq-go`) and then the record itself:
-
-```sh
-yq -i "delpaths($(cat ~/.omp/agent/config.yml.managed-keys.json))" \
-  ~/.omp/agent/config.yml
-rm ~/.omp/agent/config.yml.managed-keys.json
-```
-
-If `PI_CODING_AGENT_DIR` is set, both files live there instead.
-
-These claude-code settings have no omp equivalent, so omp doesn't get them:
-fullscreen TUI (`tui`), auto-scroll (`autoScrollEnabled`), commit and PR
-attribution (`attribution`) and agents view at startup (`defaultToAgentsView`).
-
-## Configurations
-
-There are three types of configuration that will kickstart my journey.
-
-| Type             | Symlink                                                               |
-| ---------------- | --------------------------------------------------------------------- |
-| settings.json    | Yes. Built from `claude-code/settings.nix`, claude can't mutate it    |
-| .claude.json     | No. Sets keys from `claude-code/global-config.nix`, keeps the rest    |
-| instructions     | Yes. claude only reads these, for ex: `AGENTS.md`, `rules/`, `skills` |
-| states & secrets | No. Never track these either, for ex: sessions, history, cache etc    |
+Like claude-code, omp is never installed from here. To pick omp's model, see
+[omp model](docs/preferences.md#omp-model).
 
 ## Testing
 
-I test this flake end to end with the help of Apple containers. pytest starts
-one throwaway `nixos/nix` container, where a separate test flake adds this flake
-as an input. Each test builds one of that flake's home-manager configurations
-inside the container, activates it, and checks that everything in `~/.claude` is
-built the way it is supposed to be.
+I test this flake end to end in Apple containers. pytest starts one throwaway
+`nixos/nix` container, where a separate test flake adds this flake as an input.
+Each test builds one of that flake's home-manager configurations inside the
+container, activates it, and checks that everything in `~/.claude` is built the
+way it is supposed to be.
 
 ## Retro
 
