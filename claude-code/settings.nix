@@ -4,6 +4,12 @@
   effortLevel = "medium";
 
   permissions.defaultMode = "default";
+  permissions.deny = [
+    "AskUserQuestion"
+    "SendFeedback"
+    "EnterWorktree"
+    "ListAgents"
+  ];
 
   theme = "auto";
 
@@ -12,6 +18,8 @@
   autoScrollEnabled = true;
 
   autoMemoryEnabled = false;
+
+  syncClaudeAiPlugins = false;
 
   attribution = {
     commit = "";
