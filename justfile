@@ -80,7 +80,7 @@ interface ref:
     git archive {{ ref }} | tar -x -C {{ interface_dir }}/{{ ref }}
     container run --rm --memory 2G \
       --mount type=bind,source={{ interface_dir }}/{{ ref }},target=/harness-config,readonly \
-      --mount type=bind,source={{ consumer }},target=/consumer,readonly \
+      --mount type=bind,source={{ interface_dir }}/{{ ref }}/tests/consumer,target=/consumer,readonly \
       --env "NIX_CONFIG=experimental-features = nix-command flakes" \
       {{ image }} nix eval --raw --no-write-lock-file \
       --override-input harness-config path:/harness-config /consumer#interface
