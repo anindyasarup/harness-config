@@ -1,6 +1,7 @@
 {
   lib,
   writeShellApplication,
+  writeTextFile,
   coreutils,
   gnugrep,
   jq,
@@ -52,5 +53,15 @@ in
       ];
       bashOptions = [ ];
       text = builtins.readFile ../../claude-code/hooks/post-tool-use.sh;
+    };
+
+  omp =
+    names:
+    writeTextFile {
+      name = "omp-hooks";
+      destination = "/post/harness-check.ts";
+      text = builtins.replaceStrings [ "@runner@" ] [ (lib.getExe (mkRunner names)) ] (
+        builtins.readFile ../../omp/hooks/post-tool-use.ts
+      );
     };
 }

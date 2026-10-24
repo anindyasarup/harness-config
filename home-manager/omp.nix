@@ -48,20 +48,24 @@ let
       mv "$updated_record" "$record"
     '';
   };
+  hooks = pkgs.callPackage ./lib/hooks.nix { };
   rules = pkgs.callPackage ./lib/rules.nix {
     harness = "omp";
     src = cfg.rules;
   };
   prune = pkgs.callPackage ./lib/prune.nix {
     harness = "omp";
-    paths = [ "rules" ];
+    paths = [
+      "rules"
+      "hooks"
+    ];
   };
 in
 {
   options.harness.omp = {
     enable = lib.mkEnableOption ''
-      omp with these instructions, rules, skills and settings. Replaces AGENTS.md,
-      rules/, keybindings.yml and the skills it links, and merges the keys from omp/settings.nix into
+      omp with these instructions, rules, skills, hooks and settings. Replaces AGENTS.md,
+      rules/, hooks/, keybindings.yml and the skills it links, and merges the keys from omp/settings.nix into
       config.yml in the agent folder at PI_CODING_AGENT_DIR or ~/.omp/agent,
       keeping the rest
     '';
@@ -107,6 +111,15 @@ in
       default = null;
       description = "omp's default model, written to modelRoles.default as provider/model. Null leaves omp's model alone. Claude Code's model is unaffected.";
     };
+
+    hooks.postToolUse = lib.mkOption {
+      type = lib.types.listOf (lib.types.enum hooks.checkNames);
+      default = [
+        "no-comments"
+        "no-emdash"
+      ];
+      description = "Checks run, in order, on the text omp adds with write or edit. When a check fails, the tool result becomes an error with the check's reason added.";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -117,6 +130,10 @@ in
       };
       "${agentDir}/rules" = {
         source = rules;
+        force = true;
+      };
+      "${agentDir}/hooks" = {
+        source = hooks.omp cfg.hooks.postToolUse;
         force = true;
       };
       "${agentDir}/keybindings.yml" = {

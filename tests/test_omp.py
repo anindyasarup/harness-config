@@ -9,8 +9,8 @@ RECORD = f"{CONFIG}.managed-keys.json"
 
 @pytest.fixture
 def clean_home(in_container):
-    """Removes the omp agent folders, the Claude Code folder and .claude.json before and after the test."""
-    folders = ["/root/.omp", "/root/omp-agent", "/root/.claude", "/root/.claude.json"]
+    """Removes the omp agent folders, the Claude Code folder, .claude.json and the omp work folder before and after the test."""
+    folders = ["/root/.omp", "/root/omp-agent", "/root/.claude", "/root/.claude.json", "/root/work"]
     in_container("rm", "-rf", *folders)
     yield
     in_container("rm", "-rf", *folders)
@@ -344,3 +344,133 @@ def test_leaves_an_existing_rules_folder_alone_unless_enabled(clean_home, activa
     activate("test")
 
     assert in_container("cat", "/root/.omp/agent/rules/mine.md").stdout == "mine"
+
+
+def tool_result(*, in_container, call, edit_mode="replace"):
+    session = in_container(
+        "sh",
+        "-c",
+        'cd /root/work && PI_EDIT_VARIANT="$1" SCRIPTED_TOOL_CALL="$2" omp -p --mode json'
+        " -e /consumer/omp/scripted-provider.ts --model scripted/scripted --approval-mode yolo go",
+        "sh",
+        edit_mode,
+        json.dumps(call),
+    )
+    events = [json.loads(line) for line in session.stdout.splitlines() if line.startswith("{")]
+    ends = [event for event in events if event["type"] == "tool_execution_end"]
+    assert len(ends) == 1, session.stdout + session.stderr
+    return ends[0]
+
+
+def reported(result):
+    return "\n".join(chunk["text"] for chunk in result["result"]["content"] if chunk["type"] == "text")
+
+
+@pytest.mark.parametrize(
+    ("on_disk", "call", "edit_mode", "reason"),
+    [
+        pytest.param(
+            None,
+            {"name": "write", "arguments": {"path": "notes.md", "content": "a — b\n"}},
+            "replace",
+            "Em-dash added in /root/work/notes.md",
+            id="an em-dash in a written file",
+        ),
+        pytest.param(
+            ("edited.py", "x = 1\ny = 2\n"),
+            {
+                "name": "edit",
+                "arguments": {"path": "edited.py", "old_string": "y = 2\n", "new_string": "y = 2  # set y\n"},
+            },
+            "replace",
+            "1 comment(s) introduced in /root/work/edited.py",
+            id="a comment added by an edit",
+        ),
+        pytest.param(
+            ("patched.md", "a\n"),
+            {
+                "name": "edit",
+                "arguments": {"input": "*** Begin Patch\n*** Update File: patched.md\n@@\n-a\n+a — b\n*** End Patch\n"},
+            },
+            "apply_patch",
+            "Em-dash added in /root/work/patched.md",
+            id="an em-dash added by a patch",
+        ),
+    ],
+)
+def test_omp_reports_a_failing_check_after_a_write_or_edit(
+    clean_home, activate, in_container, on_disk, call, edit_mode, reason
+):
+    activate("with-omp")
+    in_container("mkdir", "-p", "/root/work")
+    if on_disk:
+        seed(in_container=in_container, path=f"/root/work/{on_disk[0]}", text=on_disk[1])
+
+    result = tool_result(in_container=in_container, call=call, edit_mode=edit_mode)
+
+    assert result["isError"] is True, result
+    assert reason in reported(result), reported(result)
+
+
+@pytest.mark.parametrize(
+    ("on_disk", "call"),
+    [
+        pytest.param(
+            None,
+            {"name": "write", "arguments": {"path": "clean.py", "content": "x = 1\n"}},
+            id="a clean written file",
+        ),
+        pytest.param(
+            ("kept.py", "x = 1  # set x\ny = 2\n"),
+            {"name": "edit", "arguments": {"path": "kept.py", "old_string": "y = 2\n", "new_string": "y = 3\n"}},
+            id="a clean edit to a file with comments",
+        ),
+    ],
+)
+def test_omp_passes_a_clean_write_or_edit_untouched(clean_home, activate, in_container, on_disk, call):
+    activate("with-omp")
+    in_container("mkdir", "-p", "/root/work")
+    if on_disk:
+        seed(in_container=in_container, path=f"/root/work/{on_disk[0]}", text=on_disk[1])
+
+    result = tool_result(in_container=in_container, call=call)
+
+    assert result["isError"] is False, result
+    assert len(result["result"]["content"]) == 1, result
+
+
+def test_omp_runs_only_the_checks_it_is_given(clean_home, activate, in_container):
+    activate("with-omp-hooks")
+    in_container("mkdir", "-p", "/root/work")
+
+    result = tool_result(
+        in_container=in_container,
+        call={"name": "write", "arguments": {"path": "mixed.py", "content": "x = 1  # set x\ny = 'a — b'\n"}},
+    )
+
+    assert "Em-dash added" in reported(result), reported(result)
+    assert "comment(s) introduced" not in reported(result), reported(result)
+
+
+def test_replaces_an_existing_hooks_folder_with_a_store_link(clean_home, activate, in_container):
+    seed(in_container=in_container, path="/root/.omp/agent/hooks/post/mine.ts", text="mine")
+
+    activate("omp")
+
+    assert in_container("readlink", "-f", "/root/.omp/agent/hooks").stdout.startswith("/nix/store/")
+    assert in_container("ls", "/root/.omp/agent/hooks/post").stdout.split() == ["harness-check.ts"]
+
+
+def test_links_its_hooks_into_the_agent_folder_variable_when_set(clean_home, activate, in_container):
+    activate("omp-agent-dir")
+
+    assert in_container("test", "-f", "/root/omp-agent/hooks/post/harness-check.ts").returncode == 0
+    assert in_container("ls", "/root/.omp").returncode != 0
+
+
+def test_leaves_an_existing_hooks_folder_alone_unless_enabled(clean_home, activate, in_container):
+    seed(in_container=in_container, path="/root/.omp/agent/hooks/post/mine.ts", text="mine")
+
+    activate("test")
+
+    assert in_container("cat", "/root/.omp/agent/hooks/post/mine.ts").stdout == "mine"

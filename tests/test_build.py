@@ -5,6 +5,15 @@ def test_rejects_an_unknown_hook(build):
     assert "no-such-check" in built.stderr, built.stderr
 
 
+def test_rejects_an_unknown_omp_hook(build):
+    built = build("omp-unknown-hook")
+
+    assert built.returncode != 0
+    assert "harness.omp.hooks.postToolUse" in built.stderr, built.stderr
+    assert "is not of type" in built.stderr, built.stderr
+    assert "no-such-check" in built.stderr, built.stderr
+
+
 def test_rejects_a_rule_without_paths(build):
     built = build("rule-without-paths")
 

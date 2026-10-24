@@ -137,6 +137,22 @@
             };
           };
         };
+        with-omp-hooks = home (
+          { pkgs, ... }:
+          {
+            harness.omp = {
+              enable = true;
+              hooks.postToolUse = [ "no-emdash" ];
+            };
+            home.packages = [ pkgs.omp ];
+          }
+        );
+        omp-unknown-hook = home {
+          harness.omp = {
+            enable = true;
+            hooks.postToolUse = [ "no-such-check" ];
+          };
+        };
         omp-agent-dir = home {
           harness.omp.enable = true;
           home.sessionVariables.PI_CODING_AGENT_DIR = "/root/omp-agent";

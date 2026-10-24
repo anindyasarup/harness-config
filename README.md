@@ -189,6 +189,15 @@ Translating claude-code's actions to omp's will come with the first remapped
 key. omp only rewrites this file to migrate old action names, and the empty
 mapping has none, so a read-only link is enough.
 
+omp gets the same post-tool-use checks too. `harness.omp.hooks.postToolUse`
+(default `no-comments` and `no-emdash`, as in claude-code) runs on the text omp
+adds with its write and edit tools, whichever edit mode omp is in. `hooks/` in
+omp's agent folder is linked to a TypeScript hook that passes that text to
+claude-code's check runner. Activation first deletes any `hooks/` already
+there, including hooks I wrote by hand. When a check fails, the tool result
+becomes an error with the check's reason added, and the model reads it there.
+As with claude-code, an unknown check name fails the build.
+
 omp gets no default model from here. To use a provider subscription such as
 GitHub Copilot, I set `harness.omp.model` to the provider and one of its
 models. Activation writes them to omp's `modelRoles.default` as
