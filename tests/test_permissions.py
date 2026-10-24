@@ -69,6 +69,45 @@ def test_asks_before_a_nix_build(activate, in_container):
     assert "Bash(nix build *)" in settings(activate, in_container)["permissions"]["ask"]
 
 
+def test_refuses_named_installers_and_global_installs_outside_nix(activate, in_container):
+    configured = settings(activate, in_container)
+    deny = configured["permissions"]["deny"]
+
+    for rule in [
+        "Bash(npm *)",
+        "Bash(npx *)",
+        "Bash(yarn *)",
+        "Bash(bun *)",
+        "Bash(pnpm -g *)",
+        "Bash(pnpm add -g *)",
+        "Bash(pnpm install -g *)",
+        "Bash(brew install *)",
+        "Bash(pip install *)",
+        "Bash(python -m pip install *)",
+        "Bash(uv tool install *)",
+        "Bash(cargo install *)",
+        "Bash(go install *)",
+        "Bash(corepack enable *)",
+        "Bash(rustup *)",
+    ]:
+        assert rule in deny, rule
+    assert "Any global install, except through nix." in configured["autoMode"]["hard_deny"]
+
+
+def test_manages_project_dependencies_with_pnpm_uv_and_cargo_without_asking(activate, in_container):
+    allow = settings(activate, in_container)["permissions"]["allow"]
+
+    for rule in [
+        "Bash(pnpm install *)",
+        "Bash(pnpm add *)",
+        "Bash(pnpm dlx *)",
+        "Bash(uv sync *)",
+        "Bash(uv add *)",
+        "Bash(cargo add *)",
+    ]:
+        assert rule in allow, rule
+
+
 def test_runs_named_tests_builds_lints_and_format_checks_without_asking(activate, in_container):
     allow = settings(activate, in_container)["permissions"]["allow"]
 
