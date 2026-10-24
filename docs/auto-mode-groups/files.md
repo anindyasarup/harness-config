@@ -19,5 +19,6 @@
   `~/.config/*`
 - Edit `/etc`, `/nix/store`, `/Library`, `/System`
 - `rm`, `rm -rf` outside the repo
+- Edit `~/.ssh`
 - `chmod`, `chown` outside the repo
 - `sudo`

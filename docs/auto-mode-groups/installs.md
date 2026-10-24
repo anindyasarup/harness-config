@@ -20,4 +20,3 @@
 - `deno -g`, `dotnet -g`, `composer global`
 - `mise -g`, `asdf install`, `volta install`, `corepack enable`
 - `rustup`
-- `curl ... | sh`
