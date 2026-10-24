@@ -8,7 +8,11 @@ let
   cfg = config.harness.omp;
   agentDir =
     config.home.sessionVariables.PI_CODING_AGENT_DIR or "${config.home.homeDirectory}/.omp/agent";
-  settings = import ../omp/settings.nix;
+  settings =
+    import ../omp/settings.nix
+    // lib.optionalAttrs (cfg.model != null) {
+      modelRoles.default = "${cfg.model.provider}/${cfg.model.model}";
+    };
   managedSettingsKeys = lib.collect lib.isList (
     lib.mapAttrsRecursiveCond (value: value != { }) (path: _: path) settings
   );
@@ -51,6 +55,27 @@ in
       config.yml in the agent folder at PI_CODING_AGENT_DIR or ~/.omp/agent,
       keeping the rest
     '';
+
+    model = lib.mkOption {
+      type = lib.types.nullOr (
+        lib.types.submodule {
+          options = {
+            provider = lib.mkOption {
+              type = lib.types.str;
+              example = "github-copilot";
+              description = "omp provider id.";
+            };
+            model = lib.mkOption {
+              type = lib.types.str;
+              example = "claude-sonnet-4.5";
+              description = "Model id the provider offers.";
+            };
+          };
+        }
+      );
+      default = null;
+      description = "omp's default model, written to modelRoles.default as provider/model. Null leaves omp's model alone. Claude Code's model is unaffected.";
+    };
   };
 
   config = lib.mkIf cfg.enable {

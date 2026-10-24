@@ -154,3 +154,39 @@ def test_omp_reports_its_settings(clean_home, activate, in_container):
     assert setting("defaultThinkingLevel") == "medium"
     assert setting("tools.approvalMode") == "always-ask"
     assert setting("modelRoles") == {}
+
+
+def test_sets_the_default_model_role_to_the_chosen_provider_and_model(clean_home, activate, in_container):
+    activate("omp-model")
+
+    assert read_config(in_container)["modelRoles"] == {"default": "github-copilot/claude-sonnet-4.5"}
+
+
+def test_removes_the_model_it_set_once_the_model_is_unset(clean_home, activate, in_container):
+    activate("omp-model")
+    seed(
+        in_container=in_container,
+        path=CONFIG,
+        text="modelRoles:\n  default: github-copilot/claude-sonnet-4.5\n  smol: openai/gpt-4.1-mini\n",
+    )
+
+    activate("omp")
+
+    assert read_config(in_container)["modelRoles"] == {"smol": "openai/gpt-4.1-mini"}
+    assert ["modelRoles", "default"] not in json.loads(in_container("cat", RECORD).stdout)
+
+
+def test_leaves_claude_codes_settings_alone(clean_home, activate, in_container):
+    activate("test")
+    without_omp_model = in_container("cat", "/root/.claude/settings.json").stdout
+
+    activate("omp-model")
+
+    assert in_container("cat", "/root/.claude/settings.json").stdout == without_omp_model
+
+
+def test_omp_reports_its_model_role(clean_home, activate, in_container):
+    activate("with-omp-model")
+
+    model_roles = json.loads(in_container("omp", "config", "get", "modelRoles", "--json").stdout)["value"]
+    assert model_roles == {"default": "github-copilot/claude-sonnet-4.5"}

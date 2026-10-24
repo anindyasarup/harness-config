@@ -113,6 +113,29 @@
             home.packages = [ pkgs.omp ];
           }
         );
+        with-omp-model = home (
+          { pkgs, ... }:
+          {
+            harness.omp = {
+              enable = true;
+              model = {
+                provider = "github-copilot";
+                model = "claude-sonnet-4.5";
+              };
+            };
+            home.packages = [ pkgs.omp ];
+          }
+        );
+        omp-model = home {
+          harness.claude-code.enable = true;
+          harness.omp = {
+            enable = true;
+            model = {
+              provider = "github-copilot";
+              model = "claude-sonnet-4.5";
+            };
+          };
+        };
         omp-agent-dir = home {
           harness.omp.enable = true;
           home.sessionVariables.PI_CODING_AGENT_DIR = "/root/omp-agent";

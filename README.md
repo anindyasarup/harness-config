@@ -160,6 +160,22 @@ it works with or without claude-code:
 
 Like claude-code, omp is never installed from here.
 
+omp gets no default model from here. To use a provider subscription such as
+GitHub Copilot, I set `harness.omp.model` to the provider and one of its
+models. Activation writes them to omp's `modelRoles.default` as
+`provider/model`:
+
+```nix
+harness.omp.model = {
+  provider = "github-copilot";
+  model = "claude-sonnet-4.5";
+};
+```
+
+claude-code's model doesn't change. If I leave the option unset, activation
+leaves omp's model alone and removes a model it set earlier. I still log in to
+the provider myself, with `omp login github-copilot` or `/login` inside omp.
+
 omp's agent folder is `~/.omp/agent`. If it lives somewhere else, I set
 `home.sessionVariables.PI_CODING_AGENT_DIR` to that path.
 
