@@ -2,6 +2,6 @@
 {
   imports = [
     (import ./claude-code.nix { inherit humanizer mattpocock-skills; })
-    ./omp.nix
+    (import ./omp.nix { inherit humanizer mattpocock-skills; })
   ];
 }

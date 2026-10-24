@@ -141,6 +141,12 @@
           harness.omp.enable = true;
           home.sessionVariables.PI_CODING_AGENT_DIR = "/root/omp-agent";
         };
+        omp-skills = home {
+          harness.omp = {
+            enable = true;
+            skills.demo = ./skills/demo;
+          };
+        };
         rule-without-paths = home {
           harness.claude-code = {
             enable = true;

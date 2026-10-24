@@ -7,12 +7,6 @@
   ...
 }:
 let
-  mattpocockPlugin = lib.importJSON "${mattpocock-skills}/.claude-plugin/plugin.json";
-  mattpocockSkills = lib.listToAttrs (
-    map (
-      path: lib.nameValuePair (baseNameOf path) "${mattpocock-skills}/${lib.removePrefix "./" path}"
-    ) mattpocockPlugin.skills
-  );
   cfg = config.harness.claude-code;
   claudeCode = config.programs.claude-code;
   minVersion = "2.1.280";
@@ -93,10 +87,7 @@ in
 
     skills = lib.mkOption {
       type = lib.types.attrsOf lib.types.path;
-      default = {
-        inherit humanizer;
-      }
-      // mattpocockSkills;
+      default = import ./lib/skills.nix { inherit lib humanizer mattpocock-skills; };
       defaultText = lib.literalExpression "{ humanizer = <github:blader/humanizer>; } // <the skills in github:mattpocock/skills's Claude Code plugin>";
       description = "Skill directories, each linked as skills/<name>.";
     };

@@ -1,3 +1,4 @@
+{ humanizer, mattpocock-skills }:
 {
   config,
   lib,
@@ -51,9 +52,10 @@ in
 {
   options.harness.omp = {
     enable = lib.mkEnableOption ''
-      omp with these instructions and settings. Replaces AGENTS.md and merges
-      the keys from omp/settings.nix into config.yml in the agent folder at
-      PI_CODING_AGENT_DIR or ~/.omp/agent, keeping the rest
+      omp with these instructions, skills and settings. Replaces AGENTS.md and
+      the skills it links, and merges the keys from omp/settings.nix into
+      config.yml in the agent folder at PI_CODING_AGENT_DIR or ~/.omp/agent,
+      keeping the rest
     '';
 
     instructions = lib.mkOption {
@@ -61,6 +63,13 @@ in
       default = ../preferences/AGENTS.md;
       defaultText = lib.literalExpression "harness-config's preferences/AGENTS.md";
       description = "Global instructions, linked as AGENTS.md.";
+    };
+
+    skills = lib.mkOption {
+      type = lib.types.attrsOf lib.types.path;
+      default = import ./lib/skills.nix { inherit lib humanizer mattpocock-skills; };
+      defaultText = lib.literalExpression "{ humanizer = <github:blader/humanizer>; } // <the skills in github:mattpocock/skills's Claude Code plugin>";
+      description = "Skill directories, each linked as skills/<name>. omp skips a skill whose SKILL.md has no description.";
     };
 
     model = lib.mkOption {
@@ -86,10 +95,19 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    home.file."${agentDir}/AGENTS.md" = {
-      source = cfg.instructions;
-      force = true;
-    };
+    home.file = {
+      "${agentDir}/AGENTS.md" = {
+        source = cfg.instructions;
+        force = true;
+      };
+    }
+    // lib.mapAttrs' (
+      name: source:
+      lib.nameValuePair "${agentDir}/skills/${name}" {
+        inherit source;
+        force = true;
+      }
+    ) cfg.skills;
 
     home.activation.setOmpSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       run ${lib.getExe setSettings} ${lib.escapeShellArg "${agentDir}/config.yml"}

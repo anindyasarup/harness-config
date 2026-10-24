@@ -215,3 +215,46 @@ def test_replaces_an_existing_agents_md_with_a_store_link(clean_home, activate, 
     activate("omp")
 
     assert in_container("readlink", "-f", "/root/.omp/agent/AGENTS.md").stdout.startswith("/nix/store/")
+
+
+def linked_skills(*, in_container, folder):
+    return sorted(in_container("ls", folder).stdout.split())
+
+
+def test_links_the_same_skills_as_claude_code(clean_home, activate, in_container):
+    activate("test")
+    claude_code_skills = linked_skills(in_container=in_container, folder="/root/.claude/skills")
+
+    activate("omp")
+
+    assert "humanizer" in claude_code_skills
+    assert linked_skills(in_container=in_container, folder="/root/.omp/agent/skills") == claude_code_skills
+    outside_the_store = [
+        name
+        for name in claude_code_skills
+        if not in_container("readlink", "-f", f"/root/.omp/agent/skills/{name}").stdout.startswith("/nix/store/")
+    ]
+    assert outside_the_store == []
+
+
+def test_omp_lists_every_linked_skill(clean_home, activate, in_container):
+    activate("with-omp")
+
+    listed = json.loads(in_container("sh", "-c", "cd /tmp && omp skill list --json").stdout)["skills"]
+    native = sorted(skill["name"] for skill in listed if skill["source"] == "native:user")
+
+    assert "humanizer" in native
+    assert native == linked_skills(in_container=in_container, folder="/root/.omp/agent/skills")
+
+
+def test_links_its_skills_into_the_agent_folder_variable_when_set(clean_home, activate, in_container):
+    activate("omp-agent-dir")
+
+    assert in_container("test", "-f", "/root/omp-agent/skills/humanizer/SKILL.md").returncode == 0
+    assert in_container("ls", "/root/.omp").returncode != 0
+
+
+def test_links_only_the_skills_it_is_given(clean_home, activate, in_container):
+    activate("omp-skills")
+
+    assert linked_skills(in_container=in_container, folder="/root/.omp/agent/skills") == ["demo"]

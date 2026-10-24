@@ -165,6 +165,13 @@ omp gets the same instructions as claude-code: `harness.omp.instructions`
 folder, replacing any file already there. omp only reads it, so a read-only
 link is enough.
 
+omp gets the same skills too: each one in `harness.omp.skills` (default the
+same skills as claude-code) is linked as `skills/<name>` in omp's agent folder.
+Pinning or swapping `humanizer` or `mattpocock-skills` changes both harnesses.
+omp skips, without a warning, any skill whose `SKILL.md` has no `description`
+in its frontmatter. Every default skill has one; `omp skill list` shows what omp
+loaded.
+
 omp gets no default model from here. To use a provider subscription such as
 GitHub Copilot, I set `harness.omp.model` to the provider and one of its
 models. Activation writes them to omp's `modelRoles.default` as
