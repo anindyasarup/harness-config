@@ -2,6 +2,23 @@
 
 Versions follow [docs/adr/0001-versioning.md](docs/adr/0001-versioning.md).
 
+## 2.2.0
+
+### Breaking
+
+- With `harness.omp.enable`, activation links `extensions/harness-read-guard.ts`
+  in omp's agent folder and replaces any file already there. If you wrote an
+  extension with that name, rename it before updating.
+
+### Added
+
+- omp refuses to read the secret files in the permissions rules (`~/.ssh`,
+  `~/.gnupg`, `~/.aws`, `~/.config/gh/hosts.yml` and `~/.netrc`), and `.env` or
+  `.env.*` files outside the git repo it runs in. This covers its read tool and
+  shell commands, and the model gets the reason as the tool's error. A shell
+  command that reaches a secret by a relative path still runs, and omp's grep
+  and glob tools aren't checked.
+
 ## 2.1.0
 
 ### Changed
