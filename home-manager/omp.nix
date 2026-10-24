@@ -14,24 +14,23 @@ let
     harness = "omp";
     rules = import ../preferences/permissions;
   };
-  settings =
-    lib.recursiveUpdate (import ../omp/settings.nix) permissionRules.settings
-    // lib.optionalAttrs (cfg.model != null) {
-      modelRoles.default = "${cfg.model.provider}/${cfg.model.model}";
-    };
-  setSettings = pkgs.callPackage ./lib/managed-merge.nix {
+  rules = pkgs.callPackage ./lib/rules.nix {
     harness = "omp";
-    values = settings;
+    src = cfg.rules;
   };
   hooks = pkgs.callPackage ./lib/hooks.nix { };
   readGuard = pkgs.replaceVars ../omp/extensions/read-guard.ts {
     neverDoReads = builtins.toJSON permissionRules.neverDoReads;
     git = lib.getExe pkgs.git;
   };
-  rules = pkgs.callPackage ./lib/rules.nix {
-    harness = "omp";
-    src = cfg.rules;
-  };
+  linkedFiles = {
+    "AGENTS.md" = cfg.instructions;
+    inherit rules;
+    hooks = hooks.omp cfg.hooks.postToolUse;
+    "keybindings.yml" = (pkgs.formats.yaml { }).generate "omp-keybindings.yml" { };
+    "extensions/harness-read-guard.ts" = readGuard;
+  }
+  // lib.mapAttrs' (name: lib.nameValuePair "skills/${name}") cfg.skills;
   prune = pkgs.callPackage ./lib/prune.nix {
     harness = "omp";
     paths = [
@@ -42,6 +41,15 @@ let
       "commands"
     ];
     dirs = [ "skills" ];
+  };
+  settings =
+    lib.recursiveUpdate (import ../omp/settings.nix) permissionRules.settings
+    // lib.optionalAttrs (cfg.model != null) {
+      modelRoles.default = "${cfg.model.provider}/${cfg.model.model}";
+    };
+  setSettings = pkgs.callPackage ./lib/managed-merge.nix {
+    harness = "omp";
+    values = settings;
   };
 in
 {
@@ -106,35 +114,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    home.file = {
-      "${agentDir}/AGENTS.md" = {
-        source = cfg.instructions;
-        force = true;
-      };
-      "${agentDir}/rules" = {
-        source = rules;
-        force = true;
-      };
-      "${agentDir}/hooks" = {
-        source = hooks.omp cfg.hooks.postToolUse;
-        force = true;
-      };
-      "${agentDir}/keybindings.yml" = {
-        source = (pkgs.formats.yaml { }).generate "omp-keybindings.yml" { };
-        force = true;
-      };
-      "${agentDir}/extensions/harness-read-guard.ts" = {
-        source = readGuard;
-        force = true;
-      };
-    }
-    // lib.mapAttrs' (
-      name: source:
-      lib.nameValuePair "${agentDir}/skills/${name}" {
+    home.file = lib.mapAttrs' (
+      path: source:
+      lib.nameValuePair "${agentDir}/${path}" {
         inherit source;
         force = true;
       }
-    ) cfg.skills;
+    ) linkedFiles;
 
     home.activation = {
       pruneOmpConfig = lib.hm.dag.entryBetween [ "linkGeneration" ] [ "writeBoundary" ] ''
