@@ -10,7 +10,7 @@
 
 ## Never do
 
-- Any global install
+- Any global install, except through nix
 - `npm`, `npx`, `yarn`, `bun`
 - `pnpm -g`
 - `brew install`, `brew tap`, `mas install`, `port install`
