@@ -61,7 +61,7 @@ in
   options.harness.omp = {
     enable = lib.mkEnableOption ''
       omp with these instructions, rules, skills and settings. Replaces AGENTS.md,
-      rules/ and the skills it links, and merges the keys from omp/settings.nix into
+      rules/, keybindings.yml and the skills it links, and merges the keys from omp/settings.nix into
       config.yml in the agent folder at PI_CODING_AGENT_DIR or ~/.omp/agent,
       keeping the rest
     '';
@@ -117,6 +117,10 @@ in
       };
       "${agentDir}/rules" = {
         source = rules;
+        force = true;
+      };
+      "${agentDir}/keybindings.yml" = {
+        source = (pkgs.formats.yaml { }).generate "omp-keybindings.yml" { };
         force = true;
       };
     }

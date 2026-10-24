@@ -322,6 +322,22 @@ def test_replaces_an_existing_rules_folder_with_a_store_link(clean_home, activat
     assert in_container("readlink", "-f", "/root/.omp/agent/rules").stdout.startswith("/nix/store/")
 
 
+def test_replaces_existing_keybindings_with_an_empty_store_link(clean_home, activate, in_container):
+    seed(in_container=in_container, path="/root/.omp/agent/keybindings.yml", text="app.tools.expand: ctrl+x\n")
+
+    activate("omp")
+
+    assert in_container("readlink", "-f", "/root/.omp/agent/keybindings.yml").stdout.startswith("/nix/store/")
+    assert read_config(in_container, "/root/.omp/agent/keybindings.yml") == {}
+
+
+def test_links_its_keybindings_into_the_agent_folder_variable_when_set(clean_home, activate, in_container):
+    activate("omp-agent-dir")
+
+    assert read_config(in_container, "/root/omp-agent/keybindings.yml") == {}
+    assert in_container("ls", "/root/.omp").returncode != 0
+
+
 def test_leaves_an_existing_rules_folder_alone_unless_enabled(clean_home, activate, in_container):
     seed(in_container=in_container, path="/root/.omp/agent/rules/mine.md", text="mine")
 

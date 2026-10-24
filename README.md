@@ -181,6 +181,14 @@ first time it edits or writes a matching file; claude-code also loads it when it
 reads one. As with claude-code, a rule without `paths:` fails the build.
 `omp ttsr list` shows which rules omp loaded.
 
+omp gets the same keybindings too. harness-config doesn't remap any key in
+claude-code, so `keybindings.yml` in omp's agent folder is linked as an empty
+mapping, replacing any file already there, and both harnesses keep their own
+default keys. Since nothing is remapped, no key is missing from omp.
+Translating claude-code's actions to omp's will come with the first remapped
+key. omp only rewrites this file to migrate old action names, and the empty
+mapping has none, so a read-only link is enough.
+
 omp gets no default model from here. To use a provider subscription such as
 GitHub Copilot, I set `harness.omp.model` to the provider and one of its
 models. Activation writes them to omp's `modelRoles.default` as
