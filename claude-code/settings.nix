@@ -1,15 +1,19 @@
-{ configDir }:
+{ configDir, permissionRules }:
 {
   model = "sonnet";
   effortLevel = "medium";
 
-  permissions.defaultMode = "default";
-  permissions.deny = [
-    "AskUserQuestion"
-    "SendFeedback"
-    "EnterWorktree"
-    "ListAgents"
-  ];
+  permissions = permissionRules.permissions // {
+    defaultMode = "default";
+    deny = [
+      "AskUserQuestion"
+      "SendFeedback"
+      "EnterWorktree"
+      "ListAgents"
+    ]
+    ++ permissionRules.permissions.deny;
+  };
+  inherit (permissionRules) autoMode;
 
   theme = "auto";
 

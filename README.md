@@ -18,8 +18,8 @@ This repo splits configuration into two layers:
    `settings.json`, hook wiring and file locations. Switching harnesses means
    rewriting this layer.
 2. Preferences: the conventions I apply when writing and reviewing code,
-   whatever the harness. They live in `AGENTS.md` and `rules/` and should
-   outlive the harness layer.
+   whatever the harness. They live in `AGENTS.md`, `rules/` and the
+   permissions rules in `permissions/`, and should outlive the harness layer.
 
 Keeping the layers separate allows to build for a new harness,
 and the preferences carry over untouched.

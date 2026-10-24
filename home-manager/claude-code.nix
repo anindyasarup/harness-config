@@ -48,6 +48,11 @@ let
     harness = "claude-code";
     src = cfg.rules;
   };
+  permissionRules = import ./lib/permissions.nix {
+    inherit lib;
+    harness = "claude-code";
+    rules = import ../preferences/permissions;
+  };
   prune = pkgs.callPackage ./lib/prune.nix {
     harness = "claude-code";
     paths = [
@@ -126,7 +131,10 @@ in
     programs.claude-code = {
       enable = true;
       package = lib.mkDefault null;
-      settings = import ../claude-code/settings.nix { inherit (claudeCode) configDir; };
+      settings = import ../claude-code/settings.nix {
+        inherit (claudeCode) configDir;
+        inherit permissionRules;
+      };
     };
 
     home.file = {
