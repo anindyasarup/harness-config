@@ -160,6 +160,11 @@ it works with or without claude-code:
 
 Like claude-code, omp is never installed from here.
 
+omp gets the same instructions as claude-code: `harness.omp.instructions`
+(default `preferences/AGENTS.md`) is linked as `AGENTS.md` in omp's agent
+folder, replacing any file already there. omp only reads it, so a read-only
+link is enough.
+
 omp gets no default model from here. To use a provider subscription such as
 GitHub Copilot, I set `harness.omp.model` to the provider and one of its
 models. Activation writes them to omp's `modelRoles.default` as

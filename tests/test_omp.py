@@ -190,3 +190,28 @@ def test_omp_reports_its_model_role(clean_home, activate, in_container):
 
     model_roles = json.loads(in_container("omp", "config", "get", "modelRoles", "--json").stdout)["value"]
     assert model_roles == {"default": "github-copilot/claude-sonnet-4.5"}
+
+
+def test_links_agents_md_as_its_instructions(clean_home, activate, in_container):
+    activate("omp")
+
+    instructions = in_container("cat", "/root/.omp/agent/AGENTS.md")
+    agents_md = in_container("cat", "/harness-config/preferences/AGENTS.md")
+
+    assert instructions.returncode == 0, instructions.stderr
+    assert instructions.stdout == agents_md.stdout
+
+
+def test_links_its_instructions_into_the_agent_folder_variable_when_set(clean_home, activate, in_container):
+    activate("omp-agent-dir")
+
+    assert in_container("test", "-f", "/root/omp-agent/AGENTS.md").returncode == 0
+    assert in_container("ls", "/root/.omp").returncode != 0
+
+
+def test_replaces_an_existing_agents_md_with_a_store_link(clean_home, activate, in_container):
+    seed(in_container=in_container, path="/root/.omp/agent/AGENTS.md", text="mine")
+
+    activate("omp")
+
+    assert in_container("readlink", "-f", "/root/.omp/agent/AGENTS.md").stdout.startswith("/nix/store/")

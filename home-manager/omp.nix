@@ -51,10 +51,17 @@ in
 {
   options.harness.omp = {
     enable = lib.mkEnableOption ''
-      omp with these settings. Merges the keys from omp/settings.nix into
-      config.yml in the agent folder at PI_CODING_AGENT_DIR or ~/.omp/agent,
-      keeping the rest
+      omp with these instructions and settings. Replaces AGENTS.md and merges
+      the keys from omp/settings.nix into config.yml in the agent folder at
+      PI_CODING_AGENT_DIR or ~/.omp/agent, keeping the rest
     '';
+
+    instructions = lib.mkOption {
+      type = lib.types.path;
+      default = ../preferences/AGENTS.md;
+      defaultText = lib.literalExpression "harness-config's preferences/AGENTS.md";
+      description = "Global instructions, linked as AGENTS.md.";
+    };
 
     model = lib.mkOption {
       type = lib.types.nullOr (
@@ -79,6 +86,11 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    home.file."${agentDir}/AGENTS.md" = {
+      source = cfg.instructions;
+      force = true;
+    };
+
     home.activation.setOmpSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       run ${lib.getExe setSettings} ${lib.escapeShellArg "${agentDir}/config.yml"}
     '';
