@@ -2,15 +2,14 @@
 
 ## Don't ask
 
-- `ls`, `cat`, `head`, `tail`, `rg`, `fd`, `find` outside the repo
-- Read `/nix/store`
-- Write `$CLAUDE_JOB_DIR/tmp`
+- Write `$CLAUDE_JOB_DIR/tmp`, `/tmp`
 
 ## Ask
 
+- `ls`, `cat`, `head`, `tail`, `rg`, `fd`, `find` outside the repo
+- Read `/nix/store`
 - Edit, Write outside the repo
 - `cp`, `mv`, `mkdir`, `touch` outside the repo
-- Write `/tmp`
 
 ## Never do
 

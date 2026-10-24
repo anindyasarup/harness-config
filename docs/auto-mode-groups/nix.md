@@ -17,4 +17,5 @@
 
 - `darwin-rebuild switch`, `home-manager switch`
 - `nix flake update`
+- Edit `flake.lock`
 - `nix profile install`, `nix profile add`, `nix-env -i`
