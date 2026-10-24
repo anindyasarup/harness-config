@@ -108,6 +108,51 @@ def test_manages_project_dependencies_with_pnpm_uv_and_cargo_without_asking(acti
         assert rule in allow, rule
 
 
+def test_refuses_reads_of_secrets_outside_the_repo(activate, in_container):
+    configured = settings(activate, in_container)
+    deny = configured["permissions"]["deny"]
+
+    for rule in [
+        "Read(~/.ssh/**)",
+        "Read(~/.gnupg/**)",
+        "Read(~/.aws/**)",
+        "Read(~/.config/gh/hosts.yml)",
+        "Read(~/.netrc)",
+    ]:
+        assert rule in deny, rule
+    assert "Reading `.env` or `.env.*` files outside the repo." in configured["autoMode"]["hard_deny"]
+
+
+def test_refuses_secrets_in_requests_piped_downloads_exposed_servers_tunnels_scans_logins_and_publishing(activate, in_container):
+    configured = settings(activate, in_container)
+    deny = configured["permissions"]["deny"]
+    hard_deny = configured["autoMode"]["hard_deny"]
+
+    for rule in [
+        "Bash(nc -l *)",
+        "Bash(ngrok *)",
+        "Bash(cloudflared tunnel *)",
+        "Bash(tailscale funnel *)",
+        "Bash(nmap *)",
+        "Bash(nc -z *)",
+        "Bash(ssh-copy-id *)",
+        "Bash(gh auth login *)",
+        "Bash(docker login *)",
+        "Bash(pnpm publish *)",
+        "Bash(cargo publish *)",
+        "Bash(uv publish *)",
+        "Bash(gh release create *)",
+        "Bash(docker push *)",
+    ]:
+        assert rule in deny, rule
+    for prose in [
+        "Sending secrets, tokens or `.env` contents in a request.",
+        "Piping a download into a shell or interpreter.",
+        "Starting `python -m http.server` without `--bind 127.0.0.1`.",
+    ]:
+        assert prose in hard_deny, prose
+
+
 def test_runs_named_tests_builds_lints_and_format_checks_without_asking(activate, in_container):
     allow = settings(activate, in_container)["permissions"]["allow"]
 
@@ -202,19 +247,32 @@ def test_refuses_weakening_tests_real_systems_deploys_and_consumer_lock_updates(
         assert prose in configured["autoMode"]["hard_deny"], prose
 
 
-def test_refuses_reads_of_secrets_outside_the_repo(activate, in_container):
+def test_asks_before_write_authenticated_and_remote_requests_and_a_local_only_server(activate, in_container):
     configured = settings(activate, in_container)
-    deny = configured["permissions"]["deny"]
+    ask = configured["permissions"]["ask"]
+    soft_deny = configured["autoMode"]["soft_deny"]
 
     for rule in [
-        "Read(~/.ssh/**)",
-        "Read(~/.gnupg/**)",
-        "Read(~/.aws/**)",
-        "Read(~/.config/gh/hosts.yml)",
-        "Read(~/.netrc)",
+        "Bash(curl -X POST *)",
+        "Bash(curl -X PUT *)",
+        "Bash(curl -X PATCH *)",
+        "Bash(curl -X DELETE *)",
+        "Bash(curl -d *)",
+        "Bash(curl -F *)",
+        "Bash(curl -T *)",
+        "Bash(curl -u *)",
+        "Bash(gh api -X *)",
+        "Bash(gh api -f *)",
+        "Bash(gh api -F *)",
+        "Bash(gh api --input *)",
+        "Bash(python -m http.server --bind 127.0.0.1 *)",
     ]:
-        assert rule in deny, rule
-    assert "Reading `.env` or `.env.*` files outside the repo." in configured["autoMode"]["hard_deny"]
+        assert rule in ask, rule
+    for prose in [
+        "Requests with `curl` that send an `Authorization` header.",
+        "`ssh`, `scp` or `rsync` to a remote host.",
+    ]:
+        assert prose in soft_deny, prose
 
 
 def test_refuses_edits_to_generated_and_system_files_and_damage_outside_the_repo(activate, in_container):
@@ -257,3 +315,19 @@ def test_writes_temporary_files_without_asking(activate, in_container):
 
     assert "Edit(//tmp/**)" in configured["permissions"]["allow"]
     assert "Writing files in the job's temporary folder, `$CLAUDE_JOB_DIR/tmp`." in configured["autoMode"]["allow"]
+
+
+def test_runs_lookups_and_read_only_requests_without_asking(activate, in_container):
+    configured = settings(activate, in_container)
+    allow = configured["permissions"]["allow"]
+    auto_allow = configured["autoMode"]["allow"]
+
+    for rule in ["Bash(dig *)", "Bash(nslookup *)", "Bash(host *)", "Bash(ping -c *)"]:
+        assert rule in allow, rule
+    for prose in [
+        "Searching the web with WebSearch and fetching pages with WebFetch.",
+        "GET requests with `curl` or `wget` that send no credentials.",
+        "Requests with `curl` to `localhost` or `127.0.0.1`, on any port or path.",
+        "GET requests with `gh api`.",
+    ]:
+        assert prose in auto_allow, prose
