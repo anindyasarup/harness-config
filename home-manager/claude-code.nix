@@ -10,49 +10,28 @@ let
   cfg = config.harness.claude-code;
   claudeCode = config.programs.claude-code;
   minVersion = "2.1.280";
-  hooks = pkgs.callPackage ./lib/hooks.nix { };
-  hooksDir = pkgs.linkFarm "claude-code-hooks" {
-    post-tool-use = lib.getExe (hooks.claude-code cfg.hooks.postToolUse);
-  };
-  globalConfig = import ../claude-code/global-config.nix;
-  managedGlobalConfigKeys = lib.collect lib.isList (
-    lib.mapAttrsRecursiveCond (value: value != { }) (path: _: path) globalConfig
-  );
-  globalConfigFile = "${
-    config.home.sessionVariables.CLAUDE_CONFIG_DIR or config.home.homeDirectory
-  }/.claude.json";
-  setGlobalConfig = pkgs.writeShellApplication {
-    name = "claude-code-set-global-config";
-    runtimeInputs = [
-      pkgs.coreutils
-      pkgs.jq
-    ];
-    text = ''
-      file=$1
-      record="$file.managed-keys.json"
-      touch "$file"
-      previous_keys=$(cat "$record" 2>/dev/null || echo '[]')
-      updated=$(mktemp "$file.XXXXXX")
-      jq --slurp --argjson previous_keys "$previous_keys" --slurpfile settings ${
-        (pkgs.formats.json { }).generate "claude-code-global-config.json" globalConfig
-      } '((.[0] // {}) | delpaths($previous_keys)) * $settings[0]' "$file" > "$updated"
-      mv "$updated" "$file"
-      updated_record=$(mktemp "$record.XXXXXX")
-      cat ${
-        (pkgs.formats.json { }).generate "claude-code-global-config-keys.json" managedGlobalConfigKeys
-      } > "$updated_record"
-      mv "$updated_record" "$record"
-    '';
-  };
-  rules = pkgs.callPackage ./lib/rules.nix {
-    harness = "claude-code";
-    src = cfg.rules;
-  };
   permissionRules = import ./lib/permissions.nix {
     inherit lib;
     harness = "claude-code";
     rules = import ../preferences/permissions;
   };
+  rules = pkgs.callPackage ./lib/rules.nix {
+    harness = "claude-code";
+    src = cfg.rules;
+  };
+  hooks = pkgs.callPackage ./lib/hooks.nix { };
+  hooksDir = pkgs.linkFarm "claude-code-hooks" {
+    post-tool-use = lib.getExe (hooks.claude-code cfg.hooks.postToolUse);
+  };
+  linkedFiles = {
+    "keybindings.json" = (pkgs.formats.json { }).generate "claude-code-keybindings.json" (
+      import ../claude-code/keybindings.nix
+    );
+    "CLAUDE.md" = cfg.instructions;
+    inherit rules;
+    hooks = hooksDir;
+  }
+  // lib.mapAttrs' (name: lib.nameValuePair "skills/${name}") cfg.skills;
   prune = pkgs.callPackage ./lib/prune.nix {
     harness = "claude-code";
     paths = [
@@ -65,6 +44,13 @@ let
     ];
     dirs = [ "skills" ];
     keep = [ "skills/synced" ];
+  };
+  globalConfigFile = "${
+    config.home.sessionVariables.CLAUDE_CONFIG_DIR or config.home.homeDirectory
+  }/.claude.json";
+  setGlobalConfig = pkgs.callPackage ./lib/managed-merge.nix {
+    harness = "claude-code";
+    values = import ../claude-code/global-config.nix;
   };
 in
 {
@@ -137,34 +123,17 @@ in
       };
     };
 
-    home.file = {
-      "${claudeCode.configDir}/settings.json".force = true;
-      "${claudeCode.configDir}/keybindings.json" = {
-        source = (pkgs.formats.json { }).generate "claude-code-keybindings.json" (
-          import ../claude-code/keybindings.nix
-        );
-        force = true;
+    home.file =
+      lib.mapAttrs' (
+        path: source:
+        lib.nameValuePair "${claudeCode.configDir}/${path}" {
+          inherit source;
+          force = true;
+        }
+      ) linkedFiles
+      // {
+        "${claudeCode.configDir}/settings.json".force = true;
       };
-      "${claudeCode.configDir}/CLAUDE.md" = {
-        source = cfg.instructions;
-        force = true;
-      };
-      "${claudeCode.configDir}/rules" = {
-        source = rules;
-        force = true;
-      };
-      "${claudeCode.configDir}/hooks" = {
-        source = hooksDir;
-        force = true;
-      };
-    }
-    // lib.mapAttrs' (
-      name: source:
-      lib.nameValuePair "${claudeCode.configDir}/skills/${name}" {
-        inherit source;
-        force = true;
-      }
-    ) cfg.skills;
 
     home.activation = {
       pruneClaudeConfig = lib.hm.dag.entryBetween [ "linkGeneration" ] [ "writeBoundary" ] ''

@@ -19,39 +19,9 @@ let
     // lib.optionalAttrs (cfg.model != null) {
       modelRoles.default = "${cfg.model.provider}/${cfg.model.model}";
     };
-  managedSettingsKeys = lib.collect lib.isList (
-    lib.mapAttrsRecursiveCond (value: value != { }) (path: _: path) settings
-  );
-  managedSettingsKeysFile =
-    (pkgs.formats.json { }).generate "omp-settings-keys.json"
-      managedSettingsKeys;
-  mergeSettings = pkgs.writeText "omp-merge-settings.yq" ''
-    with(select(tag == "!!null"); . = {})
-    | with(select(tag != "!!map"); error("the root of " + filename + " is not a mapping"))
-    | delpaths(env(PREVIOUS_KEYS) - load("${managedSettingsKeysFile}")) * load("${
-      (pkgs.formats.yaml { }).generate "omp-settings.yml" settings
-    }")
-  '';
-  setSettings = pkgs.writeShellApplication {
-    name = "omp-set-settings";
-    runtimeInputs = [
-      pkgs.coreutils
-      pkgs.yq-go
-    ];
-    text = ''
-      file=$1
-      record="$file.managed-keys.json"
-      mkdir -p "$(dirname "$file")"
-      touch "$file"
-      previous_keys=$(cat "$record" 2>/dev/null || echo '[]')
-      updated=$(mktemp "$file.XXXXXX")
-      trap 'rm -f "$updated"' EXIT
-      PREVIOUS_KEYS="$previous_keys" yq --from-file ${mergeSettings} "$file" > "$updated"
-      mv "$updated" "$file"
-      updated_record=$(mktemp "$record.XXXXXX")
-      cat ${managedSettingsKeysFile} > "$updated_record"
-      mv "$updated_record" "$record"
-    '';
+  setSettings = pkgs.callPackage ./lib/managed-merge.nix {
+    harness = "omp";
+    values = settings;
   };
   hooks = pkgs.callPackage ./lib/hooks.nix { };
   readGuard = pkgs.replaceVars ../omp/extensions/read-guard.ts {
