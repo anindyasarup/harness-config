@@ -20,6 +20,10 @@ let
   hooksDir = pkgs.linkFarm "claude-code-hooks" {
     post-tool-use = lib.getExe (hooks.claude-code cfg.hooks.postToolUse);
   };
+  globalConfig = import ../claude-code/global-config.nix;
+  managedGlobalConfigKeys = lib.collect lib.isList (
+    lib.mapAttrsRecursiveCond (value: value != { }) (path: _: path) globalConfig
+  );
   globalConfigFile = "${
     config.home.sessionVariables.CLAUDE_CONFIG_DIR or config.home.homeDirectory
   }/.claude.json";
@@ -31,14 +35,19 @@ let
     ];
     text = ''
       file=$1
+      record="$file.managed-keys.json"
       touch "$file"
+      previous_keys=$(cat "$record" 2>/dev/null || echo '[]')
       updated=$(mktemp "$file.XXXXXX")
-      jq --slurp --slurpfile settings ${
-        (pkgs.formats.json { }).generate "claude-code-global-config.json" (
-          import ../claude-code/global-config.nix
-        )
-      } '(.[0] // {}) * $settings[0]' "$file" > "$updated"
+      jq --slurp --argjson previous_keys "$previous_keys" --slurpfile settings ${
+        (pkgs.formats.json { }).generate "claude-code-global-config.json" globalConfig
+      } '((.[0] // {}) | delpaths($previous_keys)) * $settings[0]' "$file" > "$updated"
       mv "$updated" "$file"
+      updated_record=$(mktemp "$record.XXXXXX")
+      cat ${
+        (pkgs.formats.json { }).generate "claude-code-global-config-keys.json" managedGlobalConfigKeys
+      } > "$updated_record"
+      mv "$updated_record" "$record"
     '';
   };
   rules = pkgs.callPackage ./lib/rules.nix {

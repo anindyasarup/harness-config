@@ -50,6 +50,7 @@ claude-code config directory.
 | Replaced      | `settings.json`, `keybindings.json`, `CLAUDE.md`, `rules/`, `hooks/`                       |
 | Deleted       | Skills it doesn't declare except `skills/synced`, `agents/`, `commands/`, `output-styles/` |
 | Merged        | `.claude.json`: sets the keys from `claude-code/global-config.nix`, keeps the rest         |
+| Removed       | `.claude.json` keys a release stops setting, listed in `.claude.json.managed-keys.json`    |
 | Settings      | `programs.claude-code.mutableSettings` has to stay `false`                                 |
 | Version check | Only runs when claude-code comes from `programs.claude-code.package`, warns otherwise      |
 | MCP servers   | Not managed. I add them with `claude mcp add`, and claude-code keeps them                  |
@@ -120,6 +121,27 @@ It sets up `~/.claude`. If claude-code's config lives somewhere else, I set
 `programs.claude-code.configDir` to that path.
 
 Rebuild, and claude-code picks it up on its next start.
+
+### Managed keys in `.claude.json`
+
+Next to `.claude.json`, activation writes `.claude.json.managed-keys.json`, a
+JSON list of the key paths it set, such as `[["defaultToAgentsView"]]`. On the
+next activation, any key in that list that harness-config no longer sets is
+removed from `.claude.json`, so claude-code falls back to its own default. Keys
+I set myself are never removed, and the first activation, with no record yet,
+removes nothing.
+
+Turning off `harness.claude-code.enable` skips this step, so the managed keys
+stay in `.claude.json`. To clear them, I remove each path listed in the record
+and then the record itself:
+
+```sh
+jq --slurpfile keys ~/.claude.json.managed-keys.json 'delpaths($keys[0])' \
+  ~/.claude.json > ~/.claude.json.tmp && mv ~/.claude.json.tmp ~/.claude.json
+rm ~/.claude.json.managed-keys.json
+```
+
+If `CLAUDE_CONFIG_DIR` is set, both files live there instead of in `~`.
 
 ### omp
 
