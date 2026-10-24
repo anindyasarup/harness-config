@@ -1,14 +1,12 @@
 # harness-config
 
-Right now I am unable to keep track of how I've set up claude-code. My work
-and personal setups are not configured the same way, and it is becoming
-annoying to rein in the drifting configurations.
+harness-config holds how I like coding agents to work: my instructions,
+per-language rules, skills, hooks and permissions. One flake input applies them
+to every harness I use.
 
-This repo is meant to be one place that holds how I like to work, my likes
-and dislikes, per-language conventions, etc.
-
-I want to start this out with claude-code and be able to expand it to
-different harnesses.
+My work and personal claude-code setups had drifted apart, and I couldn't keep
+track of either, so I started this to give both machines the same setup. It
+began with claude-code and now covers omp as well.
 
 ## Harness vs preferences
 
@@ -18,15 +16,14 @@ This repo splits configuration into two layers:
    `settings.json`, hook wiring and file locations. Switching harnesses means
    rewriting this layer.
 2. Preferences: the conventions I apply when writing and reviewing code,
-   whatever the harness. They live in `AGENTS.md`, `rules/` and the
-   permissions rules in `permissions/`, and should outlive the harness layer.
+   whatever the harness. They live in `preferences/`: `AGENTS.md`, the rules
+   in `instructions/rules/`, the hook checks in `hooks/` and the permissions
+   rules in `permissions/`. They should outlive the harness layer.
 
-Keeping the layers separate allows to build for a new harness,
-and the preferences carry over untouched.
+With the layers kept apart, I can build for a new harness and the
+preferences carry over untouched.
 
 ## Constraints
-
-For the time being, this only supports claude-code.
 
 | Harness         | Status      |
 | --------------- | ----------- |
@@ -34,8 +31,7 @@ For the time being, this only supports claude-code.
 | pi-coding-agent | dropped     |
 | omp             | completed   |
 
-I am building this out for `claude-code >= 2.1.280`. This version of claude-code
-reads `AGENTS.md` natively.
+It targets `claude-code >= 2.1.280`, which reads `AGENTS.md` natively.
 
 It needs home-manager unstable for `programs.claude-code.mutableSettings`.
 
