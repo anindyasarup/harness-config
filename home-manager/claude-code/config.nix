@@ -1,4 +1,3 @@
-{ humanizer, mattpocock-skills }:
 {
   config,
   options,
@@ -10,29 +9,29 @@ let
   cfg = config.harness.claude-code;
   claudeCode = config.programs.claude-code;
   minVersion = "2.1.280";
-  permissionRules = import ./lib/permissions.nix {
+  permissionRules = import ../lib/permissions.nix {
     inherit lib;
     harness = "claude-code";
-    rules = import ../preferences/permissions;
+    rules = import ../../preferences/permissions;
   };
-  rules = pkgs.callPackage ./lib/rules.nix {
+  rules = pkgs.callPackage ../lib/rules.nix {
     harness = "claude-code";
     src = cfg.rules;
   };
-  hooks = pkgs.callPackage ./lib/hooks.nix { };
+  hooks = pkgs.callPackage ../lib/hooks.nix { };
   hooksDir = pkgs.linkFarm "claude-code-hooks" {
     post-tool-use = lib.getExe (hooks.claude-code cfg.hooks.postToolUse);
   };
   linkedFiles = {
     "keybindings.json" = (pkgs.formats.json { }).generate "claude-code-keybindings.json" (
-      import ../claude-code/keybindings.nix
+      import ../../claude-code/keybindings.nix
     );
     "CLAUDE.md" = cfg.instructions;
     inherit rules;
     hooks = hooksDir;
   }
   // lib.mapAttrs' (name: lib.nameValuePair "skills/${name}") cfg.skills;
-  prune = pkgs.callPackage ./lib/prune.nix {
+  prune = pkgs.callPackage ../lib/prune.nix {
     harness = "claude-code";
     paths = [
       "CLAUDE.md"
@@ -48,51 +47,12 @@ let
   globalConfigFile = "${
     config.home.sessionVariables.CLAUDE_CONFIG_DIR or config.home.homeDirectory
   }/.claude.json";
-  setGlobalConfig = pkgs.callPackage ./lib/managed-merge.nix {
+  setGlobalConfig = pkgs.callPackage ../lib/managed-merge.nix {
     harness = "claude-code";
-    values = import ../claude-code/global-config.nix;
+    values = import ../../claude-code/global-config.nix;
   };
 in
 {
-  options.harness.claude-code = {
-    enable = lib.mkEnableOption ''
-      Claude Code with these instructions, rules, skills and hooks. Replaces
-      settings.json, keybindings.json, CLAUDE.md, rules/, hooks/ and every skill in the
-      Claude config directory except skills/synced; anything else there, and agents/,
-      commands/ and output-styles/, is deleted on activation
-    '';
-
-    instructions = lib.mkOption {
-      type = lib.types.path;
-      default = ../preferences/AGENTS.md;
-      defaultText = lib.literalExpression "harness-config's preferences/AGENTS.md";
-      description = "Global instructions, linked as CLAUDE.md.";
-    };
-
-    rules = lib.mkOption {
-      type = lib.types.path;
-      default = ../preferences/instructions/rules;
-      defaultText = lib.literalExpression "harness-config's preferences/instructions/rules";
-      description = "Directory of rule files, each with paths: frontmatter, linked as rules/.";
-    };
-
-    skills = lib.mkOption {
-      type = lib.types.attrsOf lib.types.path;
-      default = import ./lib/skills.nix { inherit lib humanizer mattpocock-skills; };
-      defaultText = lib.literalExpression "{ humanizer = <github:blader/humanizer>; } // <the skills in github:mattpocock/skills's Claude Code plugin>";
-      description = "Skill directories, each linked as skills/<name>.";
-    };
-
-    hooks.postToolUse = lib.mkOption {
-      type = lib.types.listOf (lib.types.enum hooks.checkNames);
-      default = [
-        "no-comments"
-        "no-emdash"
-      ];
-      description = "Checks run, in order, on the text Claude adds with Write, Edit, MultiEdit or NotebookEdit.";
-    };
-  };
-
   config = lib.mkIf cfg.enable {
     assertions = [
       {
@@ -117,7 +77,7 @@ in
     programs.claude-code = {
       enable = true;
       package = lib.mkDefault null;
-      settings = import ../claude-code/settings.nix {
+      settings = import ../../claude-code/settings.nix {
         inherit (claudeCode) configDir;
         inherit permissionRules;
       };

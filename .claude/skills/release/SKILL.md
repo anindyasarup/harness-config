@@ -11,8 +11,8 @@ The rules are in `docs/adr/0001-versioning.md`. Read it first.
 2. Read `git log <tag>..HEAD` and the diff of each commit.
 3. Run `just interface-diff <tag>`. A removed or retyped line is major. Also
    check whether the prune `paths`, `dirs` or `keep` in
-   `home-manager/claude-code.nix` or `home-manager/omp.nix` changed; a newly
-   pruned path is major.
+   `home-manager/claude-code/config.nix` or `home-manager/omp/config.nix`
+   changed; a newly pruned path is major.
 4. Give every commit a level (major, minor, patch, or none) with a one-line
    reason. Mark any commit you can't place, and say why.
 5. The version is the last tag bumped by the highest level.

@@ -1,58 +1,11 @@
 { humanizer, mattpocock-skills }:
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}:
+{ lib, pkgs, ... }:
 let
-  cfg = config.harness.omp;
-  agentDir =
-    config.home.sessionVariables.PI_CODING_AGENT_DIR or "${config.home.homeDirectory}/.omp/agent";
-  permissionRules = import ./lib/permissions.nix {
-    inherit lib;
-    harness = "omp";
-    rules = import ../preferences/permissions;
-  };
-  rules = pkgs.callPackage ./lib/rules.nix {
-    harness = "omp";
-    src = cfg.rules;
-  };
-  hooks = pkgs.callPackage ./lib/hooks.nix { };
-  readGuard = pkgs.replaceVars ../omp/extensions/read-guard.ts {
-    neverDoReads = builtins.toJSON permissionRules.neverDoReads;
-    git = lib.getExe pkgs.git;
-  };
-  linkedFiles = {
-    "AGENTS.md" = cfg.instructions;
-    inherit rules;
-    hooks = hooks.omp cfg.hooks.postToolUse;
-    "keybindings.yml" = (pkgs.formats.yaml { }).generate "omp-keybindings.yml" { };
-    "extensions/harness-read-guard.ts" = readGuard;
-  }
-  // lib.mapAttrs' (name: lib.nameValuePair "skills/${name}") cfg.skills;
-  prune = pkgs.callPackage ./lib/prune.nix {
-    harness = "omp";
-    paths = [
-      "AGENTS.md"
-      "rules"
-      "hooks"
-      "agents"
-      "commands"
-    ];
-    dirs = [ "skills" ];
-  };
-  settings =
-    lib.recursiveUpdate (import ../omp/settings.nix) permissionRules.settings
-    // lib.optionalAttrs (cfg.model != null) {
-      modelRoles.default = "${cfg.model.provider}/${cfg.model.model}";
-    };
-  setSettings = pkgs.callPackage ./lib/managed-merge.nix {
-    harness = "omp";
-    values = settings;
-  };
+  hooks = pkgs.callPackage ../lib/hooks.nix { };
 in
 {
+  imports = [ ./config.nix ];
+
   options.harness.omp = {
     enable = lib.mkEnableOption ''
       omp with these instructions, rules, skills, hooks and settings. Replaces AGENTS.md,
@@ -63,21 +16,21 @@ in
 
     instructions = lib.mkOption {
       type = lib.types.path;
-      default = ../preferences/AGENTS.md;
+      default = ../../preferences/AGENTS.md;
       defaultText = lib.literalExpression "harness-config's preferences/AGENTS.md";
       description = "Global instructions, linked as AGENTS.md.";
     };
 
     rules = lib.mkOption {
       type = lib.types.path;
-      default = ../preferences/instructions/rules;
+      default = ../../preferences/instructions/rules;
       defaultText = lib.literalExpression "harness-config's preferences/instructions/rules";
       description = "Directory of rule files, each with paths: frontmatter, linked as rules/. omp applies each rule when it edits or writes a file its paths match.";
     };
 
     skills = lib.mkOption {
       type = lib.types.attrsOf lib.types.path;
-      default = import ./lib/skills.nix { inherit lib humanizer mattpocock-skills; };
+      default = import ../lib/skills.nix { inherit lib humanizer mattpocock-skills; };
       defaultText = lib.literalExpression "{ humanizer = <github:blader/humanizer>; } // <the skills in github:mattpocock/skills's Claude Code plugin>";
       description = "Skill directories, each linked as skills/<name>. omp skips a skill whose SKILL.md has no description.";
     };
@@ -110,25 +63,6 @@ in
         "no-emdash"
       ];
       description = "Checks run, in order, on the text omp adds with write or edit. When a check fails, the tool result becomes an error with the check's reason added.";
-    };
-  };
-
-  config = lib.mkIf cfg.enable {
-    home.file = lib.mapAttrs' (
-      path: source:
-      lib.nameValuePair "${agentDir}/${path}" {
-        inherit source;
-        force = true;
-      }
-    ) linkedFiles;
-
-    home.activation = {
-      pruneOmpConfig = lib.hm.dag.entryBetween [ "linkGeneration" ] [ "writeBoundary" ] ''
-        run ${lib.getExe prune} ${lib.escapeShellArg agentDir}
-      '';
-      setOmpSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        run ${lib.getExe setSettings} ${lib.escapeShellArg "${agentDir}/config.yml"}
-      '';
     };
   };
 }

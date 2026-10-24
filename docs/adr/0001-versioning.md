@@ -49,7 +49,7 @@ working with a warning until the next major. That makes it a minor change.
 `just interface-diff <tag>` lists the outputs, options with their types, and
 replaced paths that changed since a tag. The pruned paths aren't in that list,
 so a release also checks the prune `paths`, `dirs` and `keep` in
-`home-manager/claude-code.nix` and `home-manager/omp.nix`.
+`home-manager/claude-code/config.nix` and `home-manager/omp/config.nix`.
 
 `CHANGELOG.md` gets one entry per release, written at release time from
 `git log <tag>..HEAD`. It lists only what a consumer notices, under Breaking
