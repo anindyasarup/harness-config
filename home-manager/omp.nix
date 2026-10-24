@@ -9,8 +9,13 @@ let
   cfg = config.harness.omp;
   agentDir =
     config.home.sessionVariables.PI_CODING_AGENT_DIR or "${config.home.homeDirectory}/.omp/agent";
+  permissionRules = import ./lib/permissions.nix {
+    inherit lib;
+    harness = "omp";
+    rules = import ../preferences/permissions;
+  };
   settings =
-    import ../omp/settings.nix
+    lib.recursiveUpdate (import ../omp/settings.nix) permissionRules
     // lib.optionalAttrs (cfg.model != null) {
       modelRoles.default = "${cfg.model.provider}/${cfg.model.model}";
     };

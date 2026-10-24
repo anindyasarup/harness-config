@@ -78,8 +78,46 @@ let
       );
     };
 
+  omp =
+    let
+      approvals = {
+        never-do = "deny";
+        ask = "prompt";
+        dont-ask = "allow";
+      };
+      patterns =
+        approval: command:
+        map (match: { inherit match approval; }) [
+          command
+          "${command} *"
+        ];
+      renderKind = {
+        command = patterns;
+        read = _: _: [ ];
+        edit = _: _: [ ];
+        prose = _: _: [ ];
+      };
+      render = rule: renderKind.${rule.kind} approvals.${rule.verdict} rule.${rule.kind};
+      shellSegmentDenies =
+        map
+          (match: {
+            inherit match;
+            approval = "deny";
+          })
+          [
+            "sh"
+            "bash"
+            "zsh"
+          ];
+    in
+    {
+      bash.patterns = shellSegmentDenies ++ lib.concatMap render byVerdict;
+      tools.approval.eval = "prompt";
+    };
+
   renderers = {
     claude-code = claudeCode;
+    inherit omp;
   };
 in
 renderers.${harness}

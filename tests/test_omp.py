@@ -27,12 +27,16 @@ def read_config(in_container, path=CONFIG):
     return yaml.safe_load(in_container("cat", path).stdout)
 
 
+def read_settings(in_container, path=CONFIG):
+    return {key: value for key, value in read_config(in_container, path).items() if key != "bash"}
+
+
 def test_creates_its_config_with_its_settings(clean_home, activate, in_container):
     activate("omp")
 
-    assert read_config(in_container) == {
+    assert read_settings(in_container) == {
         "defaultThinkingLevel": "medium",
-        "tools": {"approvalMode": "always-ask"},
+        "tools": {"approvalMode": "always-ask", "approval": {"eval": "prompt"}},
     }
 
 
@@ -50,10 +54,10 @@ def test_sets_its_settings_and_keeps_the_rest(clean_home, activate, in_container
     activate("omp")
     activate("omp")
 
-    assert read_config(in_container) == {
+    assert read_settings(in_container) == {
         "theme": "dark",
         "defaultThinkingLevel": "medium",
-        "tools": {"approvalMode": "always-ask", "bash": ["ls"]},
+        "tools": {"approvalMode": "always-ask", "approval": {"eval": "prompt"}, "bash": ["ls"]},
     }
 
 
@@ -79,10 +83,10 @@ def test_removes_recorded_keys_it_no_longer_sets(clean_home, activate, in_contai
 
     activate("omp")
 
-    assert read_config(in_container) == {
+    assert read_settings(in_container) == {
         "theme": "dark",
         "defaultThinkingLevel": "medium",
-        "tools": {"approvalMode": "always-ask", "approval": {"edit": "ask"}},
+        "tools": {"approvalMode": "always-ask", "approval": {"edit": "ask", "eval": "prompt"}},
     }
 
 
@@ -91,13 +95,15 @@ def test_first_activation_removes_nothing_and_records_its_keys(clean_home, activ
 
     activate("omp")
 
-    assert read_config(in_container) == {
+    assert read_settings(in_container) == {
         "modelRoles": {"default": "x/y"},
         "defaultThinkingLevel": "medium",
-        "tools": {"approvalMode": "always-ask"},
+        "tools": {"approvalMode": "always-ask", "approval": {"eval": "prompt"}},
     }
     assert json.loads(in_container("cat", RECORD).stdout) == [
+        ["bash", "patterns"],
         ["defaultThinkingLevel"],
+        ["tools", "approval", "eval"],
         ["tools", "approvalMode"],
     ]
 
@@ -126,9 +132,9 @@ def test_leaves_its_config_and_record_alone_unless_enabled(clean_home, activate,
 def test_uses_the_agent_folder_variable_when_set(clean_home, activate, in_container):
     activate("omp-agent-dir")
 
-    assert read_config(in_container, "/root/omp-agent/config.yml") == {
+    assert read_settings(in_container, "/root/omp-agent/config.yml") == {
         "defaultThinkingLevel": "medium",
-        "tools": {"approvalMode": "always-ask"},
+        "tools": {"approvalMode": "always-ask", "approval": {"eval": "prompt"}},
     }
     assert in_container("ls", "/root/.omp").returncode != 0
 
@@ -474,3 +480,61 @@ def test_leaves_an_existing_hooks_folder_alone_unless_enabled(clean_home, activa
     activate("test")
 
     assert in_container("cat", "/root/.omp/agent/hooks/post/mine.ts").stdout == "mine"
+
+
+APPROVALS = {"deny": "deny", "ask": "prompt", "allow": "allow"}
+
+
+def claude_code_commands(*, activate, in_container):
+    activate("test")
+    permissions = json.loads(in_container("cat", "/root/.claude/settings.json").stdout)["permissions"]
+    return {
+        APPROVALS[name]: [
+            rule.removeprefix("Bash(").removesuffix(" *)") for rule in permissions[name] if rule.startswith("Bash(")
+        ]
+        for name in APPROVALS
+    }
+
+
+def test_refuses_asks_about_and_allows_the_same_commands_as_claude_code(clean_home, activate, in_container):
+    commands = claude_code_commands(activate=activate, in_container=in_container)
+
+    activate("omp")
+
+    patterns = read_config(in_container)["bash"]["patterns"]
+    rendered = [
+        {"match": match, "approval": approval}
+        for approval in ["deny", "prompt", "allow"]
+        for command in commands[approval]
+        for match in [command, f"{command} *"]
+    ]
+    assert [pattern for pattern in patterns if pattern in rendered] == rendered
+
+
+def test_orders_its_shell_patterns_deny_then_prompt_then_allow(clean_home, activate, in_container):
+    activate("omp")
+
+    approvals = [pattern["approval"] for pattern in read_config(in_container)["bash"]["patterns"]]
+
+    assert approvals == sorted(approvals, key=["deny", "prompt", "allow"].index)
+    assert set(approvals) == {"deny", "prompt", "allow"}
+
+
+def test_refuses_piping_into_a_shell_and_asks_before_shells_from_the_eval_tool(clean_home, activate, in_container):
+    activate("omp")
+
+    config = read_config(in_container)
+
+    missing = [shell for shell in ["sh", "bash", "zsh"] if {"match": shell, "approval": "deny"} not in config["bash"]["patterns"]]
+    assert missing == []
+    assert config["tools"]["approval"]["eval"] == "prompt"
+
+
+def test_omp_reports_its_shell_patterns_and_eval_approval(clean_home, activate, in_container):
+    activate("with-omp")
+
+    def setting(key):
+        return json.loads(in_container("omp", "config", "get", key, "--json").stdout)["value"]
+
+    assert setting("bash.patterns") == read_config(in_container)["bash"]["patterns"]
+    assert setting("tools.approval") == {"eval": "prompt"}

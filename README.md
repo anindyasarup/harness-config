@@ -201,6 +201,15 @@ there, including hooks I wrote by hand. When a check fails, the tool result
 becomes an error with the check's reason added, and the model reads it there.
 As with claude-code, an unknown check name fails the build.
 
+omp refuses, asks about and allows the same commands as claude-code. Each
+command in the permissions rules becomes two of omp's `bash.patterns`, the bare
+command and the command followed by `*`, ordered deny, then prompt, then allow,
+because omp uses the first pattern that matches. Denying the `sh`, `bash` and
+`zsh` segments refuses piping a download into a shell, and
+`tools.approval.eval` makes shells started from omp's eval tool ask first. omp
+has no path or prose rules, so read, edit and prose rules don't reach it.
+`omp config get bash.patterns` shows the patterns omp uses.
+
 omp gets no default model from here. To use a provider subscription such as
 GitHub Copilot, I set `harness.omp.model` to the provider and one of its
 models. Activation writes them to omp's `modelRoles.default` as
