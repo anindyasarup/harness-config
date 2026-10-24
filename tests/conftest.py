@@ -35,6 +35,12 @@ def activate(container):
 
 
 @pytest.fixture
+def try_activate(container):
+    """Builds and activates a homeConfigurations.<config> from the consumer flake inside the container, and returns the result whether or not it succeeded."""
+    return lambda config: just("activate", config)
+
+
+@pytest.fixture
 def in_container(container):
     """Runs a command inside the container and returns its exit code and output."""
     return lambda *command: just("exec", *command)

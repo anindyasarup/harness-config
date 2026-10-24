@@ -145,9 +145,10 @@ If `CLAUDE_CONFIG_DIR` is set, both files live there instead of in `~`.
 
 ### omp
 
-omp support is in progress. Turning it on only creates omp's agent folder, and
-omp keeps running on its own defaults. It has its own switch, so it works with
-or without claude-code:
+omp support is in progress. Turning it on merges the settings from
+`omp/settings.nix` into omp's `config.yml`: omp thinks at `medium` effort and
+asks before acting (`always-ask`), like claude-code. It has its own switch, so
+it works with or without claude-code:
 
 ```nix
 { pkgs, ... }:
@@ -165,6 +166,30 @@ omp's agent folder is `~/.omp/agent`. If it lives somewhere else, I set
 **WARNING:** plain pi reads `PI_CODING_AGENT_DIR` too, and home-manager's
 `programs.pi-coding-agent.configDir` can set it. If it points at pi's folder,
 omp and harness-config both write there.
+
+omp writes `config.yml` itself while it runs, so it stays a regular file.
+Every activation sets the managed keys again and keeps the rest, such as my
+theme or onboarding answers. A missing file is created. If `config.yml` isn't
+valid YAML, or its root isn't a mapping, activation fails and leaves it as it
+was. omp's onboarding wizard still runs on first launch.
+
+Next to it, `config.yml.managed-keys.json` records the key paths activation set,
+the same way as for `.claude.json`, so a key a release stops setting is removed
+and omp falls back to its own default. Turning off `harness.omp.enable` skips
+this step and leaves both files alone. To clear the managed keys, I remove each
+path listed in the record with yq (`yq-go`) and then the record itself:
+
+```sh
+yq -i "delpaths($(cat ~/.omp/agent/config.yml.managed-keys.json))" \
+  ~/.omp/agent/config.yml
+rm ~/.omp/agent/config.yml.managed-keys.json
+```
+
+If `PI_CODING_AGENT_DIR` is set, both files live there instead.
+
+These claude-code settings have no omp equivalent, so omp doesn't get them:
+fullscreen TUI (`tui`), auto-scroll (`autoScrollEnabled`), commit and PR
+attribution (`attribution`) and agents view at startup (`defaultToAgentsView`).
 
 ## Configurations
 
