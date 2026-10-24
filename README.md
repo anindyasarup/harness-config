@@ -31,7 +31,7 @@ For the time being, this only supports claude-code.
 | Harness         | Status      |
 | --------------- | ----------- |
 | claude-code     | completed   |
-| pi-coding-agent | planned     |
+| pi-coding-agent | dropped     |
 | omp             | in-progress |
 
 I am building this out for `claude-code >= 2.1.280`. This version of claude-code
