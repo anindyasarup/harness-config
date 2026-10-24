@@ -352,13 +352,14 @@ def test_leaves_an_existing_rules_folder_alone_unless_enabled(clean_home, activa
     assert in_container("cat", "/root/.omp/agent/rules/mine.md").stdout == "mine"
 
 
-def tool_result(*, in_container, call, edit_mode="replace"):
+def tool_result(*, in_container, call, edit_mode="replace", cwd="/root/work"):
     session = in_container(
         "sh",
         "-c",
-        'cd /root/work && PI_EDIT_VARIANT="$1" SCRIPTED_TOOL_CALL="$2" omp -p --mode json'
+        'cd "$1" && PI_EDIT_VARIANT="$2" SCRIPTED_TOOL_CALL="$3" omp -p --mode json'
         " -e /consumer/omp/scripted-provider.ts --model scripted/scripted --approval-mode yolo go",
         "sh",
+        cwd,
         edit_mode,
         json.dumps(call),
     )
@@ -538,3 +539,123 @@ def test_omp_reports_its_shell_patterns_and_eval_approval(clean_home, activate, 
 
     assert setting("bash.patterns") == read_config(in_container)["bash"]["patterns"]
     assert setting("tools.approval") == {"eval": "prompt"}
+
+
+@pytest.fixture
+def secrets(in_container):
+    """Seeds a file at every Never do read path. Removes those files and /root/outside before and after the test."""
+    paths = ["/root/.ssh", "/root/.gnupg", "/root/.aws", "/root/.config/gh", "/root/.netrc", "/root/outside"]
+    in_container("rm", "-rf", *paths)
+    for path in ["/root/.ssh/id_test", "/root/.gnupg/key", "/root/.aws/credentials", "/root/.config/gh/hosts.yml", "/root/.netrc"]:
+        seed(in_container=in_container, path=path, text="secret")
+    yield
+    in_container("rm", "-rf", *paths)
+
+
+@pytest.mark.parametrize(
+    "path",
+    ["~/.ssh/id_test", "~/.gnupg/key", "~/.aws/credentials", "~/.config/gh/hosts.yml", "/root/.netrc", "file:///root/.ssh/id_test"],
+)
+def test_omp_refuses_reading_a_never_do_path_with_the_read_tool(clean_home, secrets, activate, in_container, path):
+    activate("with-omp")
+    in_container("mkdir", "-p", "/root/work")
+
+    result = tool_result(in_container=in_container, call={"name": "read", "arguments": {"path": path}})
+
+    assert result["isError"] is True, result
+    assert "Never do" in reported(result), reported(result)
+    assert "secret" not in reported(result), reported(result)
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["cat ~/.ssh/id_test", 'head -n1 "$HOME/.aws/credentials"', "base64 /root/.netrc", "cp ${HOME}/.gnupg/key k && cat k"],
+)
+def test_omp_refuses_a_shell_command_that_names_a_never_do_path(clean_home, secrets, activate, in_container, command):
+    activate("with-omp")
+    in_container("mkdir", "-p", "/root/work")
+
+    result = tool_result(in_container=in_container, call={"name": "bash", "arguments": {"command": command}})
+
+    assert result["isError"] is True, result
+    assert "Never do" in reported(result), reported(result)
+    assert "secret" not in reported(result), reported(result)
+
+
+@pytest.fixture
+def repo(in_container):
+    """Makes /root/work a git repo with a pkg folder and a .env at its root, and puts a .env.local in /root/outside."""
+    in_container("mkdir", "-p", "/root/work/pkg")
+    in_container("git", "init", "-q", "/root/work")
+    seed(in_container=in_container, path="/root/work/.env", text="inside")
+    seed(in_container=in_container, path="/root/outside/.env.local", text="leaked")
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        pytest.param({"name": "read", "arguments": {"path": "/root/outside/.env.local"}}, id="read tool"),
+        pytest.param({"name": "bash", "arguments": {"command": "cat ../../outside/.env.local"}}, id="shell"),
+    ],
+)
+def test_omp_refuses_a_env_file_outside_the_repo(clean_home, secrets, repo, activate, in_container, call):
+    activate("with-omp")
+
+    result = tool_result(in_container=in_container, call=call, cwd="/root/work/pkg")
+
+    assert result["isError"] is True, result
+    assert ".env file outside the repo" in reported(result), reported(result)
+    assert "leaked" not in reported(result), reported(result)
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        pytest.param({"name": "read", "arguments": {"path": "../.env"}}, id="read tool"),
+        pytest.param({"name": "bash", "arguments": {"command": "cat ../.env"}}, id="shell"),
+    ],
+)
+def test_omp_reads_a_env_file_anywhere_in_the_repo(clean_home, secrets, repo, activate, in_container, call):
+    activate("with-omp")
+
+    result = tool_result(in_container=in_container, call=call, cwd="/root/work/pkg")
+
+    assert result["isError"] is False, result
+    assert "inside" in reported(result), reported(result)
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        pytest.param({"name": "read", "arguments": {"path": "/root/outside/notes.txt"}}, id="read tool"),
+        pytest.param({"name": "bash", "arguments": {"command": "cat ~/outside/notes.txt"}}, id="shell"),
+    ],
+)
+def test_omp_still_reads_other_files_outside_the_repo(clean_home, secrets, activate, in_container, call):
+    activate("with-omp")
+    in_container("mkdir", "-p", "/root/work")
+    seed(in_container=in_container, path="/root/outside/notes.txt", text="notes")
+
+    result = tool_result(in_container=in_container, call=call)
+
+    assert result["isError"] is False, result
+    assert "notes" in reported(result), reported(result)
+
+
+@pytest.mark.parametrize(
+    ("cwd", "path", "refused"),
+    [
+        pytest.param("/root/outside", ".env.local", False, id="in the working folder"),
+        pytest.param("/root/outside/pkg", "../.env.local", True, id="above the working folder"),
+    ],
+)
+def test_omp_treats_the_working_folder_as_the_repo_outside_a_git_repo(
+    clean_home, secrets, activate, in_container, cwd, path, refused
+):
+    activate("with-omp")
+    in_container("mkdir", "-p", "/root/outside/pkg")
+    seed(in_container=in_container, path="/root/outside/.env.local", text="outside")
+
+    result = tool_result(in_container=in_container, call={"name": "read", "arguments": {"path": path}}, cwd=cwd)
+
+    assert result["isError"] is refused, result

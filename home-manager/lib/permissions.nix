@@ -92,12 +92,13 @@ let
           "${command} *"
         ];
       renderKind = {
-        command = patterns;
-        read = _: _: [ ];
-        edit = _: _: [ ];
-        prose = _: _: [ ];
+        command = approval: command: { patterns = patterns approval command; };
+        read = approval: read: lib.optionalAttrs (approval == "deny") { neverDoReads = [ read ]; };
+        edit = _: _: { };
+        prose = _: _: { };
       };
       render = rule: renderKind.${rule.kind} approvals.${rule.verdict} rule.${rule.kind};
+      rendered = lib.zipAttrsWith (_: lib.concatLists) (map render byVerdict);
       shellSegmentDenies =
         map
           (match: {
@@ -111,8 +112,11 @@ let
           ];
     in
     {
-      bash.patterns = shellSegmentDenies ++ lib.concatMap render byVerdict;
-      tools.approval.eval = "prompt";
+      settings = {
+        bash.patterns = shellSegmentDenies ++ rendered.patterns;
+        tools.approval.eval = "prompt";
+      };
+      inherit (rendered) neverDoReads;
     };
 
   renderers = {

@@ -207,8 +207,24 @@ command and the command followed by `*`, ordered deny, then prompt, then allow,
 because omp uses the first pattern that matches. Denying the `sh`, `bash` and
 `zsh` segments refuses piping a download into a shell, and
 `tools.approval.eval` makes shells started from omp's eval tool ask first. omp
-has no path or prose rules, so read, edit and prose rules don't reach it.
+has no path or prose rules, so edit and prose rules don't reach it. Never do
+read rules reach it through the read guard below.
 `omp config get bash.patterns` shows the patterns omp uses.
+
+`extensions/harness-read-guard.ts` in omp's agent folder is linked to an
+extension that stops omp reading secrets. It blocks a call to omp's read tool
+or a shell command when the call names a Never do read path from the
+permissions rules (`~/.ssh`, `~/.gnupg`, `~/.aws`, `~/.config/gh/hosts.yml` and
+`~/.netrc`), or a `.env` or `.env.*` file outside the git repo omp runs in.
+Outside a repo, the working folder counts as the repo. The blocked call
+returns the reason as an error, so the model sees it. Reads of other files
+outside the repo still work.
+
+The guard has gaps. It checks each word of a shell command after expanding
+`~`, `$HOME` and `${HOME}`, so a command that reaches a secret through a
+relative path, such as `cd ~ && cat .ssh/id_rsa`, still runs. omp's grep and
+glob tools aren't checked. Activation replaces only
+`extensions/harness-read-guard.ts` and leaves the rest of `extensions/` alone.
 
 omp gets no default model from here. To use a provider subscription such as
 GitHub Copilot, I set `harness.omp.model` to the provider and one of its
@@ -227,8 +243,8 @@ leaves omp's model alone and removes a model it set earlier. I still log in to
 the provider myself, with `omp login github-copilot` or `/login` inside omp.
 
 As with claude-code, activation also deletes `agents/` and `commands/`, and
-keeps everything else in the agent folder, such as `mcp.json`, `extensions/`
-and sessions.
+keeps everything else in the agent folder, such as `mcp.json`, the rest of
+`extensions/` and sessions.
 
 omp's agent folder is `~/.omp/agent`. If it lives somewhere else, I set
 `home.sessionVariables.PI_CODING_AGENT_DIR` to that path.

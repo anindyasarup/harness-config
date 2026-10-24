@@ -15,7 +15,7 @@ let
     rules = import ../preferences/permissions;
   };
   settings =
-    lib.recursiveUpdate (import ../omp/settings.nix) permissionRules
+    lib.recursiveUpdate (import ../omp/settings.nix) permissionRules.settings
     // lib.optionalAttrs (cfg.model != null) {
       modelRoles.default = "${cfg.model.provider}/${cfg.model.model}";
     };
@@ -54,6 +54,10 @@ let
     '';
   };
   hooks = pkgs.callPackage ./lib/hooks.nix { };
+  readGuard = pkgs.replaceVars ../omp/extensions/read-guard.ts {
+    neverDoReads = builtins.toJSON permissionRules.neverDoReads;
+    git = lib.getExe pkgs.git;
+  };
   rules = pkgs.callPackage ./lib/rules.nix {
     harness = "omp";
     src = cfg.rules;
@@ -74,7 +78,7 @@ in
   options.harness.omp = {
     enable = lib.mkEnableOption ''
       omp with these instructions, rules, skills, hooks and settings. Replaces AGENTS.md,
-      rules/, hooks/, keybindings.yml and the skills it links, and merges the keys from omp/settings.nix into
+      rules/, hooks/, keybindings.yml, extensions/harness-read-guard.ts and the skills it links, and merges the keys from omp/settings.nix into
       config.yml in the agent folder at PI_CODING_AGENT_DIR or ~/.omp/agent,
       keeping the rest. Activation deletes agents/, commands/ and every skill it doesn't link
     '';
@@ -147,6 +151,10 @@ in
       };
       "${agentDir}/keybindings.yml" = {
         source = (pkgs.formats.yaml { }).generate "omp-keybindings.yml" { };
+        force = true;
+      };
+      "${agentDir}/extensions/harness-read-guard.ts" = {
+        source = readGuard;
         force = true;
       };
     }
