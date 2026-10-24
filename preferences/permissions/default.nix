@@ -3,4 +3,5 @@ builtins.concatMap import [
   ./nix.nix
   ./build-test.nix
   ./installs.nix
+  ./files.nix
 ]

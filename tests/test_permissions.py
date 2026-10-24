@@ -200,3 +200,60 @@ def test_refuses_weakening_tests_real_systems_deploys_and_consumer_lock_updates(
         "Deploying to any environment.",
     ]:
         assert prose in configured["autoMode"]["hard_deny"], prose
+
+
+def test_refuses_reads_of_secrets_outside_the_repo(activate, in_container):
+    configured = settings(activate, in_container)
+    deny = configured["permissions"]["deny"]
+
+    for rule in [
+        "Read(~/.ssh/**)",
+        "Read(~/.gnupg/**)",
+        "Read(~/.aws/**)",
+        "Read(~/.config/gh/hosts.yml)",
+        "Read(~/.netrc)",
+    ]:
+        assert rule in deny, rule
+    assert "Reading `.env` or `.env.*` files outside the repo." in configured["autoMode"]["hard_deny"]
+
+
+def test_refuses_edits_to_generated_and_system_files_and_damage_outside_the_repo(activate, in_container):
+    configured = settings(activate, in_container)
+    deny = configured["permissions"]["deny"]
+
+    for rule in [
+        "Edit(~/.claude/settings.json)",
+        "Edit(~/.zshrc)",
+        "Edit(~/.config/**)",
+        "Edit(//etc/**)",
+        "Edit(//nix/store/**)",
+        "Edit(//Library/**)",
+        "Edit(//System/**)",
+        "Edit(~/.ssh/**)",
+        "Bash(sudo *)",
+    ]:
+        assert rule in deny, rule
+    for prose in [
+        "Removing files outside the repo with `rm` or `rm -rf`.",
+        "Changing permissions or ownership outside the repo with `chmod` or `chown`.",
+    ]:
+        assert prose in configured["autoMode"]["hard_deny"], prose
+
+
+def test_asks_before_reading_or_changing_files_outside_the_repo(activate, in_container):
+    configured = settings(activate, in_container)
+
+    assert "Read(//nix/store/**)" in configured["permissions"]["ask"]
+    for prose in [
+        "Reading or listing files outside the repo, including with `ls`, `cat`, `head`, `tail`, `rg`, `fd` or `find`.",
+        "Editing or writing files outside the repo.",
+        "Copying, moving or creating files or folders outside the repo with `cp`, `mv`, `mkdir` or `touch`.",
+    ]:
+        assert prose in configured["autoMode"]["soft_deny"], prose
+
+
+def test_writes_temporary_files_without_asking(activate, in_container):
+    configured = settings(activate, in_container)
+
+    assert "Edit(//tmp/**)" in configured["permissions"]["allow"]
+    assert "Writing files in the job's temporary folder, `$CLAUDE_JOB_DIR/tmp`." in configured["autoMode"]["allow"]
