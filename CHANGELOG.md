@@ -2,6 +2,20 @@
 
 Versions follow [docs/adr/0001-versioning.md](docs/adr/0001-versioning.md).
 
+## 1.5.0
+
+### Added
+
+- `harness.omp.model` sets omp's default model to a provider and one of its
+  models, such as
+  `{ provider = "github-copilot"; model = "claude-sonnet-4.5"; }`.
+  Activation writes it to `modelRoles.default` in `config.yml` as
+  `provider/model` and leaves claude-code's model as it is. With the option
+  unset (the default), activation leaves omp's model alone and removes any
+  model it set earlier.
+- The README has a GitHub Copilot example and says how to log in to the
+  provider.
+
 ## 1.4.0
 
 ### Added
