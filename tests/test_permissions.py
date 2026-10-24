@@ -33,8 +33,8 @@ def test_no_rule_is_both_allowed_and_refused_or_asked(activate, in_container):
     assert set(auto_mode["allow"]) & set(auto_mode["soft_deny"]) == {"$defaults"}
 
 
-def test_keeps_the_default_permission_mode(activate, in_container):
-    assert settings(activate, in_container)["permissions"]["defaultMode"] == "default"
+def test_starts_in_auto_mode(activate, in_container):
+    assert settings(activate, in_container)["permissions"]["defaultMode"] == "auto"
 
 
 def test_claude_code_reports_its_rules_on_top_of_the_built_in_ones(activate, in_container, claude):

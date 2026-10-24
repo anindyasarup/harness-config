@@ -4,7 +4,7 @@
   effortLevel = "medium";
 
   permissions = permissionRules.permissions // {
-    defaultMode = "default";
+    defaultMode = "auto";
     deny = [
       "AskUserQuestion"
       "SendFeedback"
