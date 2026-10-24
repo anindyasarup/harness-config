@@ -2,6 +2,15 @@
 
 Versions follow [docs/adr/0001-versioning.md](docs/adr/0001-versioning.md).
 
+## 2.1.0
+
+### Changed
+
+- With `harness.omp.enable`, omp follows claude-code's command rules.
+  Activation writes them to `bash.patterns` in omp's `config.yml` and replaces
+  any patterns you set there yourself. omp also refuses piping into `sh`,
+  `bash` or `zsh`, and asks before it runs a shell from its eval tool.
+
 ## 2.0.0
 
 claude-code now starts in auto mode (`permissions.defaultMode = "auto"`). A
