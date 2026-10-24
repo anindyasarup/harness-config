@@ -6,19 +6,19 @@
 - `git branch --list`, `git fetch`
 - `git add`, `git rm`, `git mv`
 - `git switch`, `git switch -c`, `git checkout <branch>`, `git checkout -b`
-- `git stash push`
+- `git stash`, `git stash push`
 - `git reset --soft`
+- `git commit`
 - `git worktree add`
 - `gh pr view`, `gh pr list`, `gh pr diff`, `gh issue view`, `gh issue list`
 - `gh issue create`, `gh issue comment`, `gh issue close`, `gh issue edit`
 
 ## Ask
 
-- `git commit`, `git commit --amend`
 - `git push`
 - `git pull`, `git merge`, `git rebase`
 - `git cherry-pick`, `git revert`
-- `git reset --mixed`
+- `git reset`, `git reset --mixed`
 - `git restore <file>`
 - `git stash pop`
 - `git tag`
