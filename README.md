@@ -167,16 +167,18 @@ omp's agent folder is `~/.omp/agent`. If it lives somewhere else, I set
 `programs.pi-coding-agent.configDir` can set it. If it points at pi's folder,
 omp and harness-config both write there.
 
-omp writes `config.yml` itself while it runs, so it stays a regular file.
-Every activation sets the managed keys again and keeps the rest, such as my
-theme or onboarding answers. A missing file is created. If `config.yml` isn't
-valid YAML, or its root isn't a mapping, activation fails and leaves it as it
-was. omp's onboarding wizard still runs on first launch.
+omp rewrites `config.yml` while it runs, so it stays a regular file instead of
+a link. Each activation sets the managed keys again, keeps everything else
+(such as my theme or onboarding answers), and creates the file if it's
+missing. If `config.yml` isn't valid YAML, or its root isn't a mapping,
+activation fails and leaves the file alone. omp's onboarding wizard still runs
+on first launch.
 
-Next to it, `config.yml.managed-keys.json` records the key paths activation set,
-the same way as for `.claude.json`, so a key a release stops setting is removed
-and omp falls back to its own default. Turning off `harness.omp.enable` skips
-this step and leaves both files alone. To clear the managed keys, I remove each
+Activation lists the key paths it set in `config.yml.managed-keys.json`, as it
+does for `.claude.json`. When a release stops setting a key, the next
+activation removes it and omp falls back to its own default. Turning off
+`harness.omp.enable` skips this step and leaves both files alone. To clear the
+managed keys, I remove each
 path listed in the record with yq (`yq-go`) and then the record itself:
 
 ```sh
