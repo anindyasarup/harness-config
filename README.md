@@ -32,7 +32,7 @@ For the time being, this only supports claude-code.
 | --------------- | ----------- |
 | claude-code     | completed   |
 | pi-coding-agent | dropped     |
-| omp             | in-progress |
+| omp             | completed   |
 
 I am building this out for `claude-code >= 2.1.280`. This version of claude-code
 reads `AGENTS.md` natively.
@@ -145,7 +145,7 @@ If `CLAUDE_CONFIG_DIR` is set, both files live there instead of in `~`.
 
 ### omp
 
-omp support is in progress. Turning it on merges the settings from
+Turning omp on merges the settings from
 `omp/settings.nix` into omp's `config.yml`: omp thinks at `medium` effort and
 asks before acting (`always-ask`), like claude-code. It has its own switch, so
 it works with or without claude-code:
