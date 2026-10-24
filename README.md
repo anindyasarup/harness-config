@@ -167,6 +167,9 @@ link is enough.
 
 omp gets the same skills too: each one in `harness.omp.skills` (default the
 same skills as claude-code) is linked as `skills/<name>` in omp's agent folder.
+Activation deletes every other entry in `skills/`, including skills I added by
+hand. Those can live in `~/.agents/skills` instead: omp reads it too, and
+harness-config leaves it alone.
 Pinning or swapping `humanizer` or `mattpocock-skills` changes both harnesses.
 omp skips, without a warning, any skill whose `SKILL.md` has no `description`
 in its frontmatter. Every default skill has one; `omp skill list` shows what omp
@@ -213,6 +216,10 @@ harness.omp.model = {
 claude-code's model doesn't change. If I leave the option unset, activation
 leaves omp's model alone and removes a model it set earlier. I still log in to
 the provider myself, with `omp login github-copilot` or `/login` inside omp.
+
+As with claude-code, activation also deletes `agents/` and `commands/`, and
+keeps everything else in the agent folder, such as `mcp.json`, `extensions/`
+and sessions.
 
 omp's agent folder is `~/.omp/agent`. If it lives somewhere else, I set
 `home.sessionVariables.PI_CODING_AGENT_DIR` to that path.

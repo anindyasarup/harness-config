@@ -56,9 +56,13 @@ let
   prune = pkgs.callPackage ./lib/prune.nix {
     harness = "omp";
     paths = [
+      "AGENTS.md"
       "rules"
       "hooks"
+      "agents"
+      "commands"
     ];
+    dirs = [ "skills" ];
   };
 in
 {
@@ -67,7 +71,7 @@ in
       omp with these instructions, rules, skills, hooks and settings. Replaces AGENTS.md,
       rules/, hooks/, keybindings.yml and the skills it links, and merges the keys from omp/settings.nix into
       config.yml in the agent folder at PI_CODING_AGENT_DIR or ~/.omp/agent,
-      keeping the rest
+      keeping the rest. Activation deletes agents/, commands/ and every skill it doesn't link
     '';
 
     instructions = lib.mkOption {
