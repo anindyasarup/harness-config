@@ -14,18 +14,19 @@ Tags are plain semver without a `v` (`1.0.0`). Each release takes the highest
 level among its changes.
 
 Semver covers the interface: the flake outputs, the `harness.claude-code.*`
-options and their types, the hook check names, the paths in the Claude config
-directory that are replaced or pruned, and the supported claude-code and
-home-manager versions. The defaults (preferences, settings, keybindings,
-default skills and default hooks) are opinions that can change in a minor
-release.
+and `harness.omp.*` options and their types, the hook check names, the paths in
+the Claude config directory and the omp agent folder that are replaced or
+pruned, and the supported claude-code and home-manager versions. The defaults
+(preferences, settings, keybindings, default skills and default hooks) are
+opinions that can change in a minor release.
 
 Major, when an existing consumer config fails to build, loses files, or needs
 an edit to keep working the same:
 
 - A flake output or option is removed or renamed, or an option's type changes.
 - A hook check name is removed.
-- A new path in the Claude config directory is replaced or pruned.
+- A new path in the Claude config directory or the omp agent folder is
+  replaced or pruned.
 - `minVersion`, the required home-manager, or a new assertion rejects configs
   that used to build.
 

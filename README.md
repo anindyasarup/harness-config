@@ -121,6 +121,29 @@ It sets up `~/.claude`. If claude-code's config lives somewhere else, I set
 
 Rebuild, and claude-code picks it up on its next start.
 
+### omp
+
+omp support is in progress. Turning it on only creates omp's agent folder, and
+omp keeps running on its own defaults. It has its own switch, so it works with
+or without claude-code:
+
+```nix
+{ pkgs, ... }:
+{
+  harness.omp.enable = true;
+  home.packages = [ pkgs.omp ];
+}
+```
+
+Like claude-code, omp is never installed from here.
+
+omp's agent folder is `~/.omp/agent`. If it lives somewhere else, I set
+`home.sessionVariables.PI_CODING_AGENT_DIR` to that path.
+
+**WARNING:** plain pi reads `PI_CODING_AGENT_DIR` too, and home-manager's
+`programs.pi-coding-agent.configDir` can set it. If it points at pi's folder,
+omp and harness-config both write there.
+
 ## Configurations
 
 There are three types of configuration that will kickstart my journey.

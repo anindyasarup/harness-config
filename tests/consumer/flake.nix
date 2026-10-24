@@ -105,6 +105,18 @@
           programs.claude-code.mutableSettings = true;
         };
         stable-home-manager = homeWith home-manager-stable { harness.claude-code.enable = true; };
+        omp = home { harness.omp.enable = true; };
+        with-omp = home (
+          { pkgs, ... }:
+          {
+            harness.omp.enable = true;
+            home.packages = [ pkgs.omp ];
+          }
+        );
+        omp-agent-dir = home {
+          harness.omp.enable = true;
+          home.sessionVariables.PI_CODING_AGENT_DIR = "/root/omp-agent";
+        };
         rule-without-paths = home {
           harness.claude-code = {
             enable = true;
@@ -116,16 +128,31 @@
       interface =
         let
           inherit (nixpkgs) lib;
-          inherit (self.homeConfigurations.test) options config;
+          inherit (self.homeConfigurations.test) options;
           outputs = lib.concatMap (
             output: map (name: "output ${output}.${name}") (lib.attrNames harness-config.outputs.${output})
           ) (lib.attrNames harness-config.outputs);
           harnessOptions = map (option: "option ${option.name}: ${option.type}") (
             lib.optionAttrSetToDocList options.harness
           );
-          replaced = map (file: "replaces ${file.target}") (
-            lib.filter (file: lib.hasPrefix ".claude/" file.target) (lib.attrValues config.home.file)
-          );
+          replaced =
+            lib.concatMap
+              (
+                { configuration, folder }:
+                map (file: "replaces ${file.target}") (
+                  lib.filter (file: lib.hasPrefix folder file.target) (lib.attrValues configuration.config.home.file)
+                )
+              )
+              [
+                {
+                  configuration = self.homeConfigurations.test;
+                  folder = ".claude/";
+                }
+                {
+                  configuration = self.homeConfigurations.omp;
+                  folder = ".omp/agent/";
+                }
+              ];
         in
         lib.concatLines (lib.sort lib.lessThan (outputs ++ harnessOptions ++ replaced));
     };
