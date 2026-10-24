@@ -15,6 +15,7 @@ otherwise.
   Leave dead code that was already there, and mention it.
 - Work on the branch I name.
 - Don't commit until I've reviewed the changes.
+- If a command is denied, give me the command to run. Don't work around it.
 
 ## Coding
 
