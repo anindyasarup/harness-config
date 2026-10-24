@@ -2,6 +2,21 @@
 
 Versions follow [docs/adr/0001-versioning.md](docs/adr/0001-versioning.md).
 
+## 1.4.0
+
+### Added
+
+- With `harness.omp.enable`, activation sets omp's `defaultThinkingLevel` to
+  `medium` and `tools.approvalMode` to `always-ask` in `config.yml`, matching
+  claude-code's effort level and default permission mode. Activation keeps
+  every other key in the file and creates the file if it's missing. If the
+  file isn't valid YAML, activation fails and leaves it alone. As with
+  `.claude.json`, activation lists the keys it set in
+  `config.yml.managed-keys.json` and removes any that a later release stops
+  setting.
+- The README lists the claude-code settings omp has no equivalent for, and
+  shows how to clear omp's managed keys after turning omp off.
+
 ## 1.3.0
 
 ### Added
