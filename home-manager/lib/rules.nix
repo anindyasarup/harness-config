@@ -1,5 +1,7 @@
 {
+  lib,
   runCommandLocal,
+  yq-go,
   harness,
   src,
 }:
@@ -7,6 +9,11 @@ let
   renderers = {
     claude-code = ''
       cp "$rule" "$out/"
+    '';
+    omp = ''
+      ${lib.getExe yq-go} --front-matter=process \
+        '.condition = ".*" | .scope = [.paths[] | ("tool:edit(" + . + ")", "tool:write(" + . + ")")] | del(.paths)' \
+        "$rule" > "$out/$(basename "$rule")"
     '';
   };
 in

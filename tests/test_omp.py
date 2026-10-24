@@ -258,3 +258,73 @@ def test_links_only_the_skills_it_is_given(clean_home, activate, in_container):
     activate("omp-skills")
 
     assert linked_skills(in_container=in_container, folder="/root/.omp/agent/skills") == ["demo"]
+
+
+def rules_omp_applies(*, in_container, tool, path):
+    report = json.loads(
+        in_container(
+            "sh", "-c", f"cd /tmp && omp ttsr test --json --source tool --tool {tool} --path {path} 'x = 1'"
+        ).stdout
+    )
+    return sorted(rule["name"] for rule in report["triggered"] if rule["path"].startswith("/root/.omp/agent/rules/"))
+
+
+@pytest.mark.parametrize(
+    ("tool", "path", "rules"),
+    [
+        ("edit", "/work/flake.nix", ["nix"]),
+        ("write", "/work/src/app.py", ["python"]),
+        ("edit", "/work/pyproject.toml", ["python"]),
+        ("write", "/work/web/index.tsx", ["javascript"]),
+        ("edit", "/work/README.md", []),
+        ("read", "/work/flake.nix", []),
+    ],
+)
+def test_omp_applies_each_rule_to_edits_and_writes_of_the_files_its_paths_match(
+    clean_home, activate, in_container, tool, path, rules
+):
+    activate("with-omp")
+
+    assert rules_omp_applies(in_container=in_container, tool=tool, path=path) == rules
+
+
+def rule_texts(*, in_container, folder):
+    names = in_container("ls", folder).stdout.split()
+    return {name: in_container("cat", f"{folder}/{name}").stdout.split("\n---\n", 1)[1] for name in names}
+
+
+def test_gives_omp_the_text_of_every_rule(clean_home, activate, in_container):
+    activate("omp")
+
+    assert rule_texts(in_container=in_container, folder="/root/.omp/agent/rules") == rule_texts(
+        in_container=in_container, folder="/harness-config/preferences/instructions/rules"
+    )
+
+
+def test_renders_only_the_rules_it_is_given(clean_home, activate, in_container):
+    activate("omp-rules")
+
+    assert in_container("ls", "/root/.omp/agent/rules").stdout.split() == ["demo.md"]
+
+
+def test_renders_its_rules_into_the_agent_folder_variable_when_set(clean_home, activate, in_container):
+    activate("omp-agent-dir")
+
+    assert in_container("test", "-f", "/root/omp-agent/rules/nix.md").returncode == 0
+    assert in_container("ls", "/root/.omp").returncode != 0
+
+
+def test_replaces_an_existing_rules_folder_with_a_store_link(clean_home, activate, in_container):
+    seed(in_container=in_container, path="/root/.omp/agent/rules/mine.md", text="mine")
+
+    activate("omp")
+
+    assert in_container("readlink", "-f", "/root/.omp/agent/rules").stdout.startswith("/nix/store/")
+
+
+def test_leaves_an_existing_rules_folder_alone_unless_enabled(clean_home, activate, in_container):
+    seed(in_container=in_container, path="/root/.omp/agent/rules/mine.md", text="mine")
+
+    activate("test")
+
+    assert in_container("cat", "/root/.omp/agent/rules/mine.md").stdout == "mine"

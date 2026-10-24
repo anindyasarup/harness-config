@@ -147,8 +147,20 @@
             skills.demo = ./skills/demo;
           };
         };
+        omp-rules = home {
+          harness.omp = {
+            enable = true;
+            rules = ./rules;
+          };
+        };
         rule-without-paths = home {
           harness.claude-code = {
+            enable = true;
+            rules = ./rules-without-paths;
+          };
+        };
+        omp-rule-without-paths = home {
+          harness.omp = {
             enable = true;
             rules = ./rules-without-paths;
           };

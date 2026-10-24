@@ -48,12 +48,20 @@ let
       mv "$updated_record" "$record"
     '';
   };
+  rules = pkgs.callPackage ./lib/rules.nix {
+    harness = "omp";
+    src = cfg.rules;
+  };
+  prune = pkgs.callPackage ./lib/prune.nix {
+    harness = "omp";
+    paths = [ "rules" ];
+  };
 in
 {
   options.harness.omp = {
     enable = lib.mkEnableOption ''
-      omp with these instructions, skills and settings. Replaces AGENTS.md and
-      the skills it links, and merges the keys from omp/settings.nix into
+      omp with these instructions, rules, skills and settings. Replaces AGENTS.md,
+      rules/ and the skills it links, and merges the keys from omp/settings.nix into
       config.yml in the agent folder at PI_CODING_AGENT_DIR or ~/.omp/agent,
       keeping the rest
     '';
@@ -63,6 +71,13 @@ in
       default = ../preferences/AGENTS.md;
       defaultText = lib.literalExpression "harness-config's preferences/AGENTS.md";
       description = "Global instructions, linked as AGENTS.md.";
+    };
+
+    rules = lib.mkOption {
+      type = lib.types.path;
+      default = ../preferences/instructions/rules;
+      defaultText = lib.literalExpression "harness-config's preferences/instructions/rules";
+      description = "Directory of rule files, each with paths: frontmatter, linked as rules/. omp applies each rule when it edits or writes a file its paths match.";
     };
 
     skills = lib.mkOption {
@@ -100,6 +115,10 @@ in
         source = cfg.instructions;
         force = true;
       };
+      "${agentDir}/rules" = {
+        source = rules;
+        force = true;
+      };
     }
     // lib.mapAttrs' (
       name: source:
@@ -109,8 +128,13 @@ in
       }
     ) cfg.skills;
 
-    home.activation.setOmpSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      run ${lib.getExe setSettings} ${lib.escapeShellArg "${agentDir}/config.yml"}
-    '';
+    home.activation = {
+      pruneOmpConfig = lib.hm.dag.entryBetween [ "linkGeneration" ] [ "writeBoundary" ] ''
+        run ${lib.getExe prune} ${lib.escapeShellArg agentDir}
+      '';
+      setOmpSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        run ${lib.getExe setSettings} ${lib.escapeShellArg "${agentDir}/config.yml"}
+      '';
+    };
   };
 }

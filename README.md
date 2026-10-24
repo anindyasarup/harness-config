@@ -172,6 +172,15 @@ omp skips, without a warning, any skill whose `SKILL.md` has no `description`
 in its frontmatter. Every default skill has one; `omp skill list` shows what omp
 loaded.
 
+omp gets the same rules too. `harness.omp.rules` (default
+`preferences/instructions/rules`) is linked as `rules/` in omp's agent folder,
+and activation first deletes any `rules/` already there, including rules I
+wrote by hand. omp ignores `paths:`, so the build turns each rule's `paths:`
+into a scope on omp's edit and write tools. In a session, omp loads a rule the
+first time it edits or writes a matching file; claude-code also loads it when it
+reads one. As with claude-code, a rule without `paths:` fails the build.
+`omp ttsr list` shows which rules omp loaded.
+
 omp gets no default model from here. To use a provider subscription such as
 GitHub Copilot, I set `harness.omp.model` to the provider and one of its
 models. Activation writes them to omp's `modelRoles.default` as
