@@ -44,3 +44,9 @@ def try_activate(container):
 def in_container(container):
     """Runs a command inside the container and returns its exit code and output."""
     return lambda *command: just("exec", *command)
+
+
+@pytest.fixture
+def claude(in_container):
+    """Runs Claude Code inside the container as root without CAP_DAC_OVERRIDE, using setpriv from the activated configuration, and returns its exit code and output."""
+    return lambda *args: in_container("setpriv", "--inh-caps=-dac_override", "--bounding-set=-dac_override", "claude", *args)

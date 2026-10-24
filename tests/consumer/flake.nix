@@ -91,6 +91,7 @@
           {
             harness.claude-code.enable = true;
             programs.claude-code.package = pkgs.claude-code;
+            home.packages = [ pkgs.util-linux ];
           }
         );
         disabled = home { programs.claude-code.enable = true; };
